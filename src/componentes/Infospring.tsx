@@ -10,22 +10,22 @@ const Infospring = () => {
 
   return (
     <Fade triggerOnce={false} duration={2000}>
-      <div className="flex flex-initial mt-[350px]">
-        <p className="font-poppins mx-auto md:ml-[290px] md:text-left sm:text-center text-4xl">
-          ¿ Por qué Spring ?
-        </p>
+      <div className="flex flex-initial  mt-56 md:mt-[350px] text-center">
+        <strong className="font-poppins text-4xl mx-auto">
+          <p className="">¿ Por qué Spring ?</p>
+        </strong>
       </div>
 
       <div id="info" className="flex justify-center mt-[8px] mb-[100px]">
         {/* Contenedor columnas */}
-        <div className="flex flex-col sm:px-0">
+        <div className="flex flex-col">
           {/* Primera Linea */}
-          <div className="flex flex-col md:flex-row gap-4 mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5 justify-center">
             {/* Primera tarjeta */}
             <div
               onMouseEnter={handleHover}
               onMouseLeave={handleHover}
-              className="px-8 py-4 border-[1px] w-full md:w-[270px]"
+              className="px-8 py-4 border-[1px] mx-auto max-w-[340px]"
             >
               <img
                 src="https://cdn-icons-png.flaticon.com/512/7991/7991055.png"
@@ -45,7 +45,7 @@ const Infospring = () => {
             </div>
 
             {/* Segunda tarjeta */}
-            <div className="px-8 py-4 border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px]">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/3334/3334886.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"
@@ -64,7 +64,7 @@ const Infospring = () => {
             </div>
 
             {/* Tercera tarjeta */}
-            <div className="px-8 py-4 border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px]">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/2282/2282188.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"
@@ -78,12 +78,13 @@ const Infospring = () => {
               <p className="text-center">
                 Facilita la creación rápida de aplicaciones web con herramientas
                 y características
-                <br /> integradas
+                <br />
+                integradas
               </p>
             </div>
 
             {/* Cuarta tarjeta */}
-            <div className="px-8 py-4 border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px]">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/1927/1927746.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"
@@ -103,10 +104,9 @@ const Infospring = () => {
           </div>
 
           {/* Segunda Linea */}
-
-          <div className="flex flex-col md:flex-row gap-4 mt-5 md:justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5 justify-center mx-auto">
             {/* Primera tarjeta */}
-            <div className="px-8 py-4  border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px] lg:col-span-1">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/1161/1161388.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"
@@ -126,7 +126,7 @@ const Infospring = () => {
             </div>
 
             {/* Segunda tarjeta */}
-            <div className="px-8 py-4 border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px] lg:col-span-1">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/3374/3374237.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"
@@ -146,7 +146,7 @@ const Infospring = () => {
             </div>
 
             {/* Tercera tarjeta */}
-            <div className="px-8 py-4 border-[1px] w-full md:w-[270px]">
+            <div className="px-8 py-4 border-[1px] mx-auto max-w-[340px] lg:col-span-1">
               <img
                 src="https://cdn-icons-png.flaticon.com/128/1541/1541416.png"
                 className="w-[85px] h-[85px] mb-4 mt-4 mx-auto block"

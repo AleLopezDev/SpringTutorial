@@ -18,7 +18,7 @@ const Inicio = () => {
             alt="Logo"
             height="200"
           />
-          <p className="text-center text-4xl text-black font-poppins">
+          <p className="text-center text-2xl md:text-4xl text-black font-poppins ">
             Aprende <strong>SpringBoot</strong>
             <br />
             gratis y de forma práctica

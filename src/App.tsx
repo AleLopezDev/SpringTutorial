@@ -3,6 +3,7 @@ import Login from "./componentes/Login";
 import Navbar from "./componentes/Navbar";
 import Infospring from "./componentes/Infospring";
 import Paginaprincipal from "./componentes/Inicio";
+import PaginaCurso from "./componentes/PaginaCurso";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Paginaprincipal />} />
         <Route path="/login" element={<Login setUser={setUser} />} />
+        <Route path="/curso" element={<PaginaCurso />} />
       </Routes>
       <Infospring />
     </Router>
