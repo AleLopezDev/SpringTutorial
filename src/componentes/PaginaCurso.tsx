@@ -1,32 +1,35 @@
 import React from "react";
 import "../cssPersonalizado/curso.css";
+import { Collapse } from "react-collapse";
 
 const PaginaCurso = () => {
   return (
     <div>
       <div className="space-y-8 md:ml-80 md: my-20 ">
-        {/* Introducción */}
-        <div>
-          <h3 className="text-2xl font-bold md:my-3 text-green-700 text-green-700">
-            Introducción
-          </h3>
-          <div className="md:ml-4">
-            <ul className="list-decimal list-inside">
-              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                Historia y evolución de Spring Boot
-              </li>
-              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                Ventajas y características principales
-              </li>
-              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                Ecosistema Spring
-              </li>
-              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                Arquitectura de una aplicación Spring Boot
-              </li>
-            </ul>
+        <Collapse isOpened={true || false}>
+          {/* Introducción */}
+          <div>
+            <h3 className="text-2xl font-bold md:my-3 text-green-700 ">
+              Introducción
+            </h3>
+            <div className="md:ml-4">
+              <ul className="list-decimal list-inside">
+                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                  Historia y evolución de Spring Boot
+                </li>
+                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                  Ventajas y características principales
+                </li>
+                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                  Ecosistema Spring
+                </li>
+                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                  Arquitectura de una aplicación Spring Boot
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </Collapse>
 
         {/* Test Introducción */}
         <div>
