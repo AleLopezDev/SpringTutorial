@@ -1,7 +1,7 @@
 import React from "react";
 import logo from "../assets/spring-logo.png";
 import { Fade } from "react-awesome-reveal";
-import { comenzarCurso } from "../funciones/comenzarCurso";
+import { Link as RouterLink } from "react-router-dom";
 
 const Inicio = () => {
   return (
@@ -23,14 +23,13 @@ const Inicio = () => {
             <br />
             gratis y de forma práctica
           </p>
-          <div className="flex justify-center mt-10">
-            <button
-              onClick={comenzarCurso}
-              className="border-2 rounded-full px-8 py-4 bg-green-400 border-transparent"
-            >
-              ! Empezar Curso !
-            </button>
-          </div>
+          <RouterLink to="/curso">
+            <div className="flex justify-center mt-10">
+              <button className="border-2 rounded-full px-8 py-4 bg-green-400 border-transparent">
+                ! Empezar Curso !
+              </button>
+            </div>
+          </RouterLink>
         </div>
       </div>
     </Fade>

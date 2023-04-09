@@ -5,7 +5,7 @@ import Infospring from "./componentes/Infospring";
 import Paginaprincipal from "./componentes/Inicio";
 import PaginaCurso from "./componentes/PaginaCurso";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 
 const clientId =
@@ -26,16 +26,42 @@ function App() {
 
   const [user, setUser] = useState<any>(null);
 
+  useEffect(() => {
+    // Verifica si hay información de usuario en localStorage
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+
+    // Guarda la información de usuario en localStorage cuando cambia el estado del usuario
+
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
+
+  // Crea un nuevo componente que incluye Paginaprincipal e Infospring
+  const InicioConInfospring = () => {
+    return (
+      <>
+        <Paginaprincipal />
+        <Infospring />
+      </>
+    );
+  };
+
   return (
     <Router>
       {/* Pasamos al usuario como parametro*/}
       <Navbar user={user} />
       <Routes>
-        <Route path="/" element={<Paginaprincipal />} />
+        {/* Utiliza el nuevo componente en la ruta raíz */}
+        <Route path="/" element={<InicioConInfospring />} />
         <Route path="/login" element={<Login setUser={setUser} />} />
         <Route path="/curso" element={<PaginaCurso />} />
       </Routes>
-      <Infospring />
     </Router>
   );
 }
