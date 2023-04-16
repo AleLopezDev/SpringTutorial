@@ -1,15 +1,18 @@
 import "./App.css";
-import Login from "./componentes/Login";
-import Navbar from "./componentes/Navbar";
-import Infospring from "./componentes/Infospring";
-import Paginaprincipal from "./componentes/Inicio";
-import PaginaCurso from "./componentes/PaginaCurso";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { gapi } from "gapi-script";
+import UseAnimations from "react-useanimations";
+import loading from "react-useanimations/lib/loading";
 
 const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
+
+const Navbar = lazy(() => import("./componentes/Navbar"));
+const Login = lazy(() => import("./componentes/Login"));
+const Infospring = lazy(() => import("./componentes/Infospring"));
+const PaginaCurso = lazy(() => import("./componentes/PaginaCurso"));
+const Paginaprincipal = lazy(() => import("./componentes/Inicio"));
 
 function App() {
   /* Permitir inicio de sesion en google*/
@@ -22,7 +25,6 @@ function App() {
     }
     gapi.load("client:auth2", start);
   });
-  /* */
 
   const [user, setUser] = useState<any>(null);
 
@@ -42,26 +44,41 @@ function App() {
     }
   }, [user]);
 
-  // Crea un nuevo componente que incluye Paginaprincipal e Infospring
   const InicioConInfospring = () => {
     return (
       <>
-        <Paginaprincipal />
-        <Infospring />
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-screen">
+              <UseAnimations animation={loading} size={56} />
+              <br />
+            </div>
+          }
+        >
+          <Paginaprincipal />
+          <Infospring />
+        </Suspense>
       </>
     );
   };
 
   return (
     <Router>
-      {/* Pasamos al usuario como parametro*/}
-      <Navbar user={user} />
-      <Routes>
-        {/* Utiliza el nuevo componente en la ruta raíz */}
-        <Route path="/" element={<InicioConInfospring />} />
-        <Route path="/login" element={<Login setUser={setUser} />} />
-        <Route path="/curso" element={<PaginaCurso />} />
-      </Routes>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
+            <UseAnimations animation={loading} size={56} />
+            <br />
+          </div>
+        }
+      >
+        <Navbar user={user} />
+        <Routes>
+          <Route path="/" element={<InicioConInfospring />} />
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/curso" element={<PaginaCurso />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
