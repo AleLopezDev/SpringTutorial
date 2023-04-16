@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import logo from "../assets/spring-logo.png";
 import { Fade } from "react-awesome-reveal";
 import { Link as RouterLink } from "react-router-dom";
