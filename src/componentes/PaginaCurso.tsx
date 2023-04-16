@@ -1,35 +1,36 @@
-import React from "react";
 import "../cssPersonalizado/curso.css";
-import { Collapse } from "react-collapse";
+import React, { useState } from "react";
+import { Document, Page } from "react-pdf";
+import { pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const PaginaCurso = () => {
   return (
     <div>
       <div className="space-y-8 md:ml-80 md: my-20 ">
-        <Collapse isOpened={true || false}>
-          {/* Introducción */}
-          <div>
-            <h3 className="text-2xl font-bold md:my-3 text-green-700 ">
-              Introducción
-            </h3>
-            <div className="md:ml-4">
-              <ul className="list-decimal list-inside">
-                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                  Historia y evolución de Spring Boot
-                </li>
-                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                  Ventajas y características principales
-                </li>
-                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                  Ecosistema Spring
-                </li>
-                <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
-                  Arquitectura de una aplicación Spring Boot
-                </li>
-              </ul>
-            </div>
+        {/* Introducción */}
+        <div>
+          <h3 className="text-2xl font-bold md:my-3 text-green-700 ">
+            Introducción
+          </h3>
+          <div className="md:ml-4">
+            <ul className="list-decimal list-inside">
+              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1 cursor-pointer">
+                Historia y evolución de Spring Boot
+              </li>
+              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                Ventajas y características principales
+              </li>
+              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                Ecosistema Spring
+              </li>
+              <li className="border border-gray-3 00 rounded p-2 md:w-[1000px] my-1">
+                Arquitectura de una aplicación Spring Boot
+              </li>
+            </ul>
           </div>
-        </Collapse>
+        </div>
 
         {/* Test Introducción */}
         <div>
@@ -296,6 +297,7 @@ const PaginaCurso = () => {
         </div>
       </div>
     </div>
+    // Mostrar pdf
   );
 };
 
