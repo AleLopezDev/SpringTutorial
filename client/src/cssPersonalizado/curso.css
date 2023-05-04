@@ -4,6 +4,8 @@
 
   .body{
     background-color: #f3f4f6; /* Color gris claro */
+    padding: 0;
+    margin: 0;
   }
   .primary-color {
     background-color: #6db33f; /* Color verde de Spring Boot */
