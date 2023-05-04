@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCirclePlay } from "@fortawesome/free-solid-svg-icons";
 
 interface Seccion {
   id: number;
@@ -39,7 +41,6 @@ const PaginaCurso = () => {
   }, []);
 
   const handleLeccionClick = (videoUrl: string) => {
-    alert("Lección seleccionada: " + videoUrl);
     setVideoSeleccionado(videoUrl);
   };
 
@@ -59,10 +60,14 @@ const PaginaCurso = () => {
                   .map((leccion) => (
                     <li
                       key={leccion.id}
-                      className="border border-gray-300 rounded p-2 md:w-[1000px] my-1"
+                      className="border border-gray-300 rounded p-2 md:w-[1000px] my-2 cursor-pointer flex justify-end"
                       onClick={() => handleLeccionClick(leccion.video_url)}
                     >
-                      {leccion.nombre}
+                      <span className="mr-auto">{leccion.nombre}</span>
+                      <FontAwesomeIcon
+                        icon={faCirclePlay}
+                        className="ml-auto mt-1"
+                      />
                     </li>
                   ))}
               </ul>
