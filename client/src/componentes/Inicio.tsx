@@ -8,7 +8,7 @@ const Inicio = () => {
       <div>
         <div
           id="inicio"
-          className="flex-col items-center justify-center mt-52 mx-auto"
+          className="flex-col items-center justify-center mt-64 mx-auto"
         >
           <img
             src={logo}
