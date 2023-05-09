@@ -4,6 +4,8 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { gapi } from "gapi-script";
 import UseAnimations from "react-useanimations";
 import loading from "react-useanimations/lib/loading";
+import Creador from "componentes/Creador";
+import AcercaDe from "componentes/AcercaDe";
 
 const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
@@ -57,6 +59,8 @@ function App() {
         >
           <Paginaprincipal />
           <Infospring />
+          <Creador />
+          <AcercaDe />
         </Suspense>
       </>
     );

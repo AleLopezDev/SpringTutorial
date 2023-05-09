@@ -46,7 +46,7 @@ const Navbar = ({ user }: { user: any }) => {
           <li>
             <Link
               activeClass="active"
-              to="contacto"
+              to="creador"
               spy={true}
               smooth={true}
               offset={-70}

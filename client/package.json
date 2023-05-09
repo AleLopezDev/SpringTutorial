@@ -42,7 +42,8 @@
     "start": "GENERATE_SOURCEMAP=false react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev": "concurrently \"cd server && node server.js\" \"cd cliente && yarn start\""
   },
   "eslintConfig": {
     "extends": [
@@ -66,6 +67,7 @@
     "@types/react-collapse": "^5.0.1",
     "@types/react-pdf": "^6.2.0",
     "@types/react-scroll": "^1.8.6",
+    "concurrently": "^8.0.1",
     "tailwindcss": "^3.3.1"
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlay } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 interface Seccion {
   id: number;
@@ -16,9 +17,18 @@ interface Leccion {
 }
 
 const PaginaCurso = () => {
-  const [videoSeleccionado, setVideoSeleccionado] = useState<string | null>();
-  const [secciones, setSecciones] = useState<Seccion[]>([]);
-  const [lecciones, setLecciones] = useState<Leccion[]>([]);
+  const navigate = useNavigate();
+
+  const estaAutenticado = () => {
+    const user = localStorage.getItem("user");
+    return user !== null;
+  };
+
+  useEffect(() => {
+    if (!estaAutenticado()) {
+      navigate("/login");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +49,10 @@ const PaginaCurso = () => {
 
     fetchData();
   }, []);
+
+  const [videoSeleccionado, setVideoSeleccionado] = useState<string | null>();
+  const [secciones, setSecciones] = useState<Seccion[]>([]);
+  const [lecciones, setLecciones] = useState<Leccion[]>([]);
 
   const handleLeccionClick = (videoUrl: string) => {
     setVideoSeleccionado(videoUrl);
