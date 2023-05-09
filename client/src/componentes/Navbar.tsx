@@ -87,11 +87,13 @@ const Navbar = ({ user }: { user: any }) => {
         </div>
       ) : (
         <div className="flex items-center space-x-4  md:mr-10">
-          <img
-            src={user.imageUrl}
-            alt={user.name}
-            className="w-10 h-10 rounded-full"
-          />
+          <RouterLink to="/perfil">
+            <img
+              src={user.imageUrl}
+              alt={user.name}
+              className="w-10 h-10 rounded-full cursor-pointer"
+            />
+          </RouterLink>
           <span className="text-white">{user.name}</span>
           <div>
             <FontAwesomeIcon

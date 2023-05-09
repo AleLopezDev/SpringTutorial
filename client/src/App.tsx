@@ -6,6 +6,7 @@ import UseAnimations from "react-useanimations";
 import loading from "react-useanimations/lib/loading";
 import Creador from "componentes/Creador";
 import AcercaDe from "componentes/AcercaDe";
+import Perfil from "componentes/Perfil";
 
 const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
@@ -81,6 +82,7 @@ function App() {
           <Route path="/" element={<InicioConInfospring />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/curso" element={<PaginaCurso />} />
+          <Route path="/perfil" element={<Perfil user={user} />} />
         </Routes>
       </Suspense>
     </Router>
