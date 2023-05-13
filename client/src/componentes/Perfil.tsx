@@ -46,7 +46,9 @@ const Perfil = ({ user }: { user: any }) => {
               type="text"
               value={editedName}
               onChange={handleNameChange}
-              className="text-xl font-bold text-center w-full"
+              className={`text-xl font-bold text-center w-full ${
+                isEditing ? "border-2 border-blue-500" : "" // Ternario para cambiar el estilo del input
+              }`}
             />
           ) : (
             <div className="flex justify-center items-center">

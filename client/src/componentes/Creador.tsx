@@ -24,16 +24,16 @@ const Creador = () => {
             ¡Hola! Soy Alejandro, tengo 20 años y actualmente vivo en Málaga,
             España. Soy un gran apasionado de la informática y estudio en el
             Colegio San José. Me encanta explorar nuevas tecnologías y aprender
-            más sobre ellas, estoy muy emocionado de ver lo que el futuro nos
-            depara en el mundo de la tecnología. Aparte de mi amor por la
+            más sobre ellas, estoy muy ilusionado de ver lo que el futuro nos
+            depara en el mundo de la tecnología. Aparte de mi pasión por la
             informática, también disfruto jugando al fútbol y otros deportes de
             equipo. Me encanta la emoción de la competición y trabajar con mis
-            compañeros de equipo para lograr nuestras metas juntos. Siempre he
-            encontrado que los deportes de equipo me ayudan a desarrollar
-            habilidades importantes como la comunicación, el liderazgo y el
-            trabajo en equipo. En general, diría que soy una persona
-            comprometida y apasionada en lo que hago, tanto en mis estudios como
-            en mis actividades deportivas.
+            compañeros de equipo para lograr metas juntos. Siempre he encontrado
+            que los deportes de equipo me ayudan a desarrollar habilidades
+            importantes como la comunicación, el liderazgo y el trabajo en
+            equipo. En general, diría que soy una persona comprometida y
+            apasionada en lo que hago, tanto en mis estudios como en mis
+            actividades deportivas.
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(cors());
@@ -45,6 +46,33 @@ app.get("/api/lecciones", (req, res) => {
         return;
       }
       res.json(results);
+    }
+  );
+});
+
+app.post("/api/registro", async (req, res) => {
+  const { nombre, correo_electronico, contrasena } = req.body;
+
+  // Validar los datos aquí...
+
+  // Encriptar la contraseña
+  const contrasenaEncriptada = await bcrypt.hash(contrasena, 10);
+
+  // Almacenar el usuario en la base de datos
+  connection.query(
+    "INSERT INTO usuarios (nombre, correo_electronico, contrasena) VALUES (?, ?, ?)",
+    [nombre, correo_electronico, contrasenaEncriptada],
+    (error, results) => {
+      if (error) {
+        console.error("Error al registrar al usuario:", error);
+        if (error.code === "ER_DUP_ENTRY") {
+          res.status(400).send("El correo electrónico ya está en uso.");
+        } else {
+          res.status(500).send("Error al registrar al usuario.");
+        }
+        return;
+      }
+      res.json({ message: "Usuario registrado con éxito" });
     }
   );
 });

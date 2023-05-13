@@ -1,6 +1,7 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLogin from "react-google-login";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
@@ -36,17 +37,26 @@ const Login = ({ setUser }: { setUser: (user: any) => void }) => {
             placeholder="Contraseña"
           />
 
-          <button className="w-full bg-green-600 py-2 text-white">
+          <button className="w-full bg-green-600 py-2 text-white rounded-sm">
             Iniciar sesión
           </button>
           <GoogleLogin
-            className="w-full justify-center"
+            className="w-full justify-center rounded-sm"
             clientId={clientId}
             onSuccess={handleGoogleAuthSuccess}
             onFailure={handleGoogleAuthSuccess}
             cookiePolicy={"single_host_origin"}
             isSignedIn={false}
           />
+          <div className="mt-4 text-left">
+            <span className="font-bold">¿No tienes una cuenta?</span>
+            <Link
+              to="/registro"
+              className="font-bold text-blue-500 hover:underline ml-1"
+            >
+              Regístrate
+            </Link>
+          </div>
         </div>
       </div>
     </GoogleOAuthProvider>
