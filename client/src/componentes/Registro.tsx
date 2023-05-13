@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logoUser from "../assets/user.png";
 
 const Registro = () => {
   const [nombre, setNombre] = useState("");
@@ -45,12 +46,16 @@ const Registro = () => {
     });
 
     if (response.ok) {
-      // Almacenar usuario en localstorage
       const user = await response.json();
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Recargar la página
-      window.location.reload();
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...user,
+          name: nombre,
+          email: correoElectronico,
+          imageUrl: logoUser,
+        })
+      );
 
       // Navegar a la página de inicio
       navigate("/");
