@@ -8,35 +8,35 @@ const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
 
 const Login = ({ setUser }: { setUser: (user: any) => void }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [correo_electronico, setCorreo] = useState("");
+  const [contrasena, setContrasena] = useState("");
 
   const handleEmailChange = (event: any) => {
-    setEmail(event.target.value);
+    setCorreo(event.target.value);
   };
 
   const handlePasswordChange = (event: any) => {
-    setPassword(event.target.value);
+    setContrasena(event.target.value);
   };
 
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/login", {
+      const respuesta = await fetch("http://localhost:5001/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ correo_electronico, contrasena }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (respuesta.ok) {
+        const data = await respuesta.json();
+
         setUser(data.user); // Actualizar el estado del usuario
         navigate("/"); // Navegar a la página de inicio
       } else {
-        // Manejar el error de inicio de sesión
         console.error("Error al iniciar sesión");
       }
     } catch (error) {

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Progress from "react-circle-progress-bar";
+import { Line } from "rc-progress";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCirclePlay,
   faChevronDown,
-  faChevronRight,
   faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
@@ -68,10 +67,21 @@ const PaginaCurso = () => {
   };
 
   return (
-    <div className="flex justify-center">
-      <div className=" p-4 w-full md:w-3/4 lg:w-[1100px]">
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="p-4 w-full md:w-3/4 lg:w-[1100px] mx-auto">
+        <div className="mb-8" style={{ width: "100%" }}>
+          <Line
+            percent={20}
+            strokeColor="#3ECC1B"
+            strokeWidth={1}
+            className="h-4"
+          />
+        </div>
         {secciones.map((seccion) => (
-          <div key={seccion.id} className="border-black border py-4 px-4">
+          <div
+            key={seccion.id}
+            className="border-black border border-collapse  py-4 px-4"
+          >
             <h3
               className="text-2xl font-bold text-black cursor-pointer hover:text-green-500 flex justify-between items-center"
               onClick={() =>
@@ -109,6 +119,7 @@ const PaginaCurso = () => {
             )}
           </div>
         ))}
+
         {videoSeleccionado && (
           <div className="fixed inset-0 flex items-center justify-center">
             <div

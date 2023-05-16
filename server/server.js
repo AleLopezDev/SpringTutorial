@@ -51,7 +51,25 @@ app.get("/api/lecciones", (req, res) => {
   );
 });
 
+app.post("/api/progreso", (req, res) => {
+  const { usuario_id, leccion_id } = req.body;
+
+  connection.query(
+    "INSERT INTO progreso (usuario_id, leccion_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE leccion_id = ?",
+    [usuario_id, leccion_id, leccion_id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al actualizar el progreso:", error);
+        res.status(500).send("Error al actualizar el progreso");
+        return;
+      }
+      res.json({ message: "Progreso actualizado con éxito" });
+    }
+  );
+});
+
 app.post("/api/registro", async (req, res) => {
+  console.log("Recibida solicitud de registro");
   const { nombre, correo_electronico, contrasena } = req.body;
 
   // Encriptar la contraseña
@@ -77,12 +95,11 @@ app.post("/api/registro", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-  console.log("Recibida solicitud de inicio de sesión");
   const { correo_electronico, contrasena } = req.body;
 
   // Buscar al usuario en la base de datos
   connection.query(
-    "SELECT * FROM usuarios WHERE correo_electronico = ?",
+    "SELECT * FROM usuarios WHERE correo_electronico = ? ",
     [correo_electronico],
     async (error, results) => {
       if (error) {
@@ -120,5 +137,5 @@ app.post("/api/login", async (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+  console.log(`Api ejecutándose en el puerto ${PORT}`);
 });
