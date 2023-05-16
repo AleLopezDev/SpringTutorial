@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
@@ -24,7 +25,7 @@ connection.connect((error) => {
 
 app.get("/api/secciones", (req, res) => {
   connection.query(
-    "SELECT id, nombre FROM secciones ORDER BY id ASC",
+    "SELECT id, nombre, descripcion FROM secciones ORDER BY id ASC",
     (error, results) => {
       if (error) {
         console.error("Error al obtener los datos:", error);
@@ -53,8 +54,6 @@ app.get("/api/lecciones", (req, res) => {
 app.post("/api/registro", async (req, res) => {
   const { nombre, correo_electronico, contrasena } = req.body;
 
-  // Validar los datos aquí...
-
   // Encriptar la contraseña
   const contrasenaEncriptada = await bcrypt.hash(contrasena, 10);
 
@@ -73,6 +72,48 @@ app.post("/api/registro", async (req, res) => {
         return;
       }
       res.json({ message: "Usuario registrado con éxito" });
+    }
+  );
+});
+
+app.post("/api/login", async (req, res) => {
+  console.log("Recibida solicitud de inicio de sesión");
+  const { correo_electronico, contrasena } = req.body;
+
+  // Buscar al usuario en la base de datos
+  connection.query(
+    "SELECT * FROM usuarios WHERE correo_electronico = ?",
+    [correo_electronico],
+    async (error, results) => {
+      if (error) {
+        console.error("Error al buscar al usuario:", error);
+        res.status(500).send("Error al buscar al usuario");
+        return;
+      }
+
+      if (results.length > 0) {
+        const user = results[0];
+
+        // Verificar que la contraseña proporcionada sea correcta
+        const isPasswordCorrect = await bcrypt.compare(
+          contrasena,
+          user.contrasena
+        );
+
+        if (isPasswordCorrect) {
+          // Crear un token de autenticación para el usuario
+          const token = jwt.sign({ id: user.id }, "your_jwt_secret", {
+            expiresIn: "1h",
+          });
+
+          // Enviar el token al cliente
+          res.json({ token, user });
+        } else {
+          res.status(401).send("Contraseña incorrecta");
+        }
+      } else {
+        res.status(404).send("Usuario no encontrado");
+      }
     }
   );
 });

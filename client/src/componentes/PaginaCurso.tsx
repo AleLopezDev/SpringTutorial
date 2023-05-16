@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Progress from "react-circle-progress-bar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCirclePlay } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCirclePlay,
+  faChevronDown,
+  faChevronRight,
+  faChevronUp,
+} from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 interface Seccion {
   id: number;
   nombre: string;
+  descripcion: string;
 }
 
 interface Leccion {
@@ -17,6 +24,8 @@ interface Leccion {
 }
 
 const PaginaCurso = () => {
+  const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
+
   const navigate = useNavigate();
 
   const estaAutenticado = () => {
@@ -28,7 +37,7 @@ const PaginaCurso = () => {
     if (!estaAutenticado()) {
       navigate("/login");
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,36 +68,47 @@ const PaginaCurso = () => {
   };
 
   return (
-    <div>
-      {/* ... */}
-      <div className="space-y-8 md:ml-80 md:my-20">
+    <div className="flex justify-center">
+      <div className=" p-4 w-full md:w-3/4 lg:w-[1100px]">
         {secciones.map((seccion) => (
-          <div key={seccion.id}>
-            <h3 className="text-2xl font-bold md:my-3 text-green-700">
-              {seccion.nombre}
+          <div key={seccion.id} className="border-black border py-4 px-4">
+            <h3
+              className="text-2xl font-bold text-black cursor-pointer hover:text-green-500 flex justify-between items-center"
+              onClick={() =>
+                setSeccionExpandida(
+                  seccion.id === seccionExpandida ? null : seccion.id
+                )
+              }
+            >
+              <span>{seccion.nombre}</span>
+              <FontAwesomeIcon
+                icon={
+                  seccionExpandida === seccion.id ? faChevronUp : faChevronDown
+                }
+                className="ml-4"
+              />
             </h3>
-            <div className="md:ml-4">
-              <ul className="list-decimal list-inside">
-                {lecciones
-                  .filter((leccion) => leccion.seccion_id === seccion.id)
-                  .map((leccion) => (
-                    <li
-                      key={leccion.id}
-                      className="border border-gray-300 rounded p-2 md:w-[1000px] my-2 cursor-pointer flex justify-end"
-                      onClick={() => handleLeccionClick(leccion.video_url)}
-                    >
-                      <span className="mr-auto">{leccion.nombre}</span>
-                      <FontAwesomeIcon
-                        icon={faCirclePlay}
-                        className="ml-auto mt-1"
-                      />
-                    </li>
-                  ))}
-              </ul>
-            </div>
+            <p className="my-1">{seccion.descripcion}</p>
+            {seccionExpandida === seccion.id && (
+              <div className="md:ml-4 mt-4">
+                <ul className="list-decimal list-inside">
+                  {lecciones
+                    .filter((leccion) => leccion.seccion_id === seccion.id)
+                    .map((leccion) => (
+                      <li
+                        key={leccion.id}
+                        className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600"
+                        onClick={() => handleLeccionClick(leccion.video_url)}
+                      >
+                        <span>{leccion.nombre}</span>
+                        <FontAwesomeIcon icon={faCirclePlay} className="mt-1" />
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
-
         {videoSeleccionado && (
           <div className="fixed inset-0 flex items-center justify-center">
             <div

@@ -25,7 +25,7 @@ const Inicio = () => {
           <div className="flex justify-center mt-10">
             <RouterLink to="/curso">
               <button className="border-2 rounded-full px-8 py-4 bg-green-400 border-transparent">
-                ! Empezar Curso !
+                ¡ Empezar Curso !
               </button>
             </RouterLink>
           </div>

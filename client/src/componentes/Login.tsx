@@ -1,4 +1,5 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useState } from "react";
 import GoogleLogin from "react-google-login";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -7,7 +8,42 @@ const clientId =
   "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
 
 const Login = ({ setUser }: { setUser: (user: any) => void }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleEmailChange = (event: any) => {
+    setEmail(event.target.value);
+  };
+
+  const handlePasswordChange = (event: any) => {
+    setPassword(event.target.value);
+  };
+
   const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:5001/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user); // Actualizar el estado del usuario
+        navigate("/"); // Navegar a la página de inicio
+      } else {
+        // Manejar el error de inicio de sesión
+        console.error("Error al iniciar sesión");
+      }
+    } catch (error) {
+      // Manejar el error de red
+      console.error("Error de red al iniciar sesión:", error);
+    }
+  };
 
   const handleGoogleAuthSuccess = (response: any) => {
     if (response.error) {
@@ -30,14 +66,19 @@ const Login = ({ setUser }: { setUser: (user: any) => void }) => {
             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             type="text"
             placeholder="Correo electrónico"
+            onChange={handleEmailChange}
           />
           <input
             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             type="password"
             placeholder="Contraseña"
+            onChange={handlePasswordChange}
           />
 
-          <button className="w-full bg-green-600 py-2 text-white rounded-sm">
+          <button
+            className="w-full bg-green-600 py-2 text-white rounded-sm"
+            onClick={handleLogin}
+          >
             Iniciar sesión
           </button>
           <GoogleLogin

@@ -22,7 +22,7 @@ const Registro = () => {
       setError("Por favor, introduce tu correo electrónico.");
       return;
     } else if (
-      !/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(correoElectronico)
+      !/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(correoElectronico) // Comprobar que el correo electrónico tenga un formato válido
     ) {
       setError("Por favor, introduce un correo electrónico válido.");
       return;
@@ -59,6 +59,7 @@ const Registro = () => {
 
       // Navegar a la página de inicio
       navigate("/");
+      window.location.reload();
     } else {
       // Hubo un error al registrar al usuario
       const errorData = await response.json();
@@ -70,7 +71,7 @@ const Registro = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 ">
       <div className="bg-white p-8 rounded-lg shadow-md w-[500px] space-y-4">
         <h1 className="text-2xl font-bold text-center mb-4">Registro</h1>
         <form onSubmit={registrar}>
