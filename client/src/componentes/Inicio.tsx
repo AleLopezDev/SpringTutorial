@@ -5,10 +5,10 @@ import { Link as RouterLink } from "react-router-dom";
 const Inicio = () => {
   return (
     <Fade triggerOnce={false} duration={3000}>
-      <div>
+      <div className="">
         <div
           id="inicio"
-          className="flex-col items-center justify-center mt-64 mx-auto"
+          className=" flex-col items-center justify-center mt-64 mx-auto"
         >
           <img
             src={logo}
@@ -17,7 +17,7 @@ const Inicio = () => {
             alt="Logo"
             height="200"
           />
-          <p className="text-center text-2xl md:text-4xl text-black font-poppins ">
+          <p className="text-center text-2xl md:text-4xl  font-poppins ">
             Aprende <strong>SpringBoot</strong>
             <br />
             gratis y de forma práctica

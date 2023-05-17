@@ -29,23 +29,22 @@ const Login = () => {
       });
 
       if (respuesta.ok) {
-        const { user } = await respuesta.json();
+        const { token, user } = await respuesta.json();
 
-        // Obtén el usuario existente del almacenamiento local
-        const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
+        // Guarda el token de autenticación en el almacenamiento local
+        localStorage.setItem("token", token);
 
         // Fusiona la información del usuario existente con la información del usuario de la API
-        const mergedUser = {
-          ...existingUser,
+        const datosUsuario = {
           ...user,
           name: user.nombre,
           email: user.correo_electronico,
+          id: user.id,
         };
 
-        localStorage.setItem("user", JSON.stringify(mergedUser));
-
+        localStorage.setItem("user", JSON.stringify(datosUsuario));
         navigate("/"); // Navegar a la página de inicio
-        window.location.reload();
+        //window.location.reload();
       } else {
         // Establecer el mensaje de error según el código de estado de la respuesta
         if (respuesta.status === 401) {

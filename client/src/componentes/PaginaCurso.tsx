@@ -8,6 +8,7 @@ import {
   faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 interface Seccion {
   id: number;
@@ -30,6 +31,46 @@ const PaginaCurso = () => {
   const estaAutenticado = () => {
     const user = localStorage.getItem("user");
     return user !== null;
+  };
+
+  const handleContinueClick = async () => {
+    const user = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    if (user && token) {
+      const userId = JSON.parse(user).id;
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/ultima_leccion_vista/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } } // Aquí es donde se incluye el token
+        );
+        const { leccionId } = response.data;
+        navigate(`/leccion/${leccionId}`);
+      } catch (error) {
+        console.error("Error al obtener la última lección vista:", error);
+      }
+    } else {
+      // Aquí puedes manejar el caso en el que el usuario no esté en el almacenamiento local
+      console.error("No se encontró al usuario en el almacenamiento local");
+    }
+  };
+
+  const handleLeccionClick = async (leccionId: number) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/lecciones/${leccionId}`,
+          { headers: { Authorization: `Bearer ${token}` } } // Aquí es donde se incluye el token
+        );
+        // Aquí puedes manejar la respuesta de la API
+        navigate(`/leccion/${leccionId}`);
+      } catch (error) {
+        console.error("Error al obtener la lección:", error);
+      }
+    } else {
+      // Aquí puedes manejar el caso en el que el token no esté en el almacenamiento local
+      console.error("No se encontró el token en el almacenamiento local");
+    }
   };
 
   useEffect(() => {
@@ -58,17 +99,23 @@ const PaginaCurso = () => {
     fetchData();
   }, []);
 
-  const [videoSeleccionado, setVideoSeleccionado] = useState<string | null>();
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
-
-  const handleLeccionClick = (leccionId: number) => {
-    navigate(`/leccion/${leccionId}`);
-  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-green ">
       <div className="p-4 w-full md:w-3/4 lg:max-w-screen-lg mx-auto">
+        <div className="flex justify-between items-center">
+          <p className="font-poppins text-2xl mb-5 font-bold">Tu progreso :</p>
+          <button
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded md:mb-6 mb-5"
+            onClick={handleContinueClick}
+          >
+            Continuar
+            <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+          </button>
+        </div>
+
         <div className="mb-8 w-full">
           <ProgressBar completed={20} bgColor="#3ECC1B" height="20px" />
         </div>
@@ -116,21 +163,6 @@ const PaginaCurso = () => {
             )}
           </div>
         ))}
-
-        {videoSeleccionado && (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <div
-              className="bg-black bg-opacity-50 w-full h-full absolute"
-              onClick={() => setVideoSeleccionado(null)}
-            ></div>
-            <video
-              src={videoSeleccionado}
-              controls
-              autoPlay
-              className="z-10"
-            ></video>
-          </div>
-        )}
       </div>
     </div>
   );

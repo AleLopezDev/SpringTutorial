@@ -14,7 +14,7 @@ const Navbar = ({ user }: { user: any }) => {
   };
 
   return (
-    <nav className="bg-black px-4 flex justify-between items-center font-poppins py-4 lg:py-7">
+    <nav className="bg-[#12111C] px-4 flex justify-between items-center font-poppins py-4 lg:py-7">
       <div className="flex items-center md:ml-5 lg:ml-10">
         <FontAwesomeIcon icon={faLeaf} className="text-green-500 text-lg " />
         <div className="text-white text-sm md:text-base lg:text-lg ml-2 md:ml-3">

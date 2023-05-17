@@ -110,18 +110,98 @@ app.post("/api/progreso", (req, res) => {
 app.get("/api/lecciones/:id", (req, res) => {
   const { id } = req.params;
 
-  connection.query(
-    "SELECT * FROM lecciones WHERE id = ?",
-    [id],
-    (error, results) => {
-      if (error) {
-        console.error("Error al obtener los datos:", error);
-        res.status(500).send("Error al obtener los datos");
-        return;
+  // Obtén el token de autenticación del encabezado de la solicitud
+  const authHeader = req.headers.authorization;
+
+  console.log(authHeader);
+
+  if (!authHeader) {
+    res.status(401).send("No se proporcionó un token de autenticación");
+    return;
+  }
+
+  // El encabezado de autorización generalmente tiene el formato "Bearer [token]"
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // Decodifica el token para obtener el ID del usuario
+    const decodedToken = jwt.verify(token, "your_jwt_secret");
+    const userId = decodedToken.id;
+
+    connection.query(
+      "SELECT * FROM lecciones WHERE id = ?",
+      [id],
+      (error, results) => {
+        if (error) {
+          console.error("Error al obtener los datos:", error);
+          res.status(500).send("Error al obtener los datos");
+          return;
+        }
+        // Actualizar la última lección vista por el usuario
+        connection.query(
+          "UPDATE usuarios SET ultima_leccion_vista = ? WHERE id = ?",
+          [id, userId],
+          (error) => {
+            if (error) {
+              console.error(
+                "Error al actualizar la última lección vista:",
+                error
+              );
+              // Podrías manejar el error de alguna manera aquí
+            }
+          }
+        );
+        res.json(results[0]);
       }
-      res.json(results[0]);
+    );
+  } catch (error) {
+    console.error("Error al decodificar el token de autenticación:", error);
+    res.status(401).send("Token de autenticación inválido");
+  }
+});
+
+app.get("/api/ultima_leccion_vista/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  // Obtén el token de autenticación del encabezado de la solicitud
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    res.status(401).send("No se proporcionó un token de autenticación");
+    return;
+  }
+
+  // El encabezado de autorización generalmente tiene el formato "Bearer [token]"
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // Decodifica el token para obtener el ID del usuario
+    const decodedToken = jwt.verify(token, "your_jwt_secret");
+    const tokenUserId = decodedToken.id;
+
+    // Verifica que el ID del usuario del token coincide con el ID del usuario de la ruta
+    if (tokenUserId !== parseInt(userId)) {
+      res.status(403).send("No tienes permiso para acceder a estos datos");
+      return;
     }
-  );
+
+    connection.query(
+      "SELECT ultima_leccion_vista FROM usuarios WHERE id = ?",
+      [userId],
+      (error, results) => {
+        if (error) {
+          console.error("Error al obtener la última lección vista:", error);
+          res.status(500).send("Error al obtener la última lección vista");
+          return;
+        }
+
+        res.json({ leccionId: results[0].ultima_leccion_vista });
+      }
+    );
+  } catch (error) {
+    console.error("Error al decodificar el token de autenticación:", error);
+    res.status(401).send("Token de autenticación inválido");
+  }
 });
 
 app.post("/api/registro", async (req, res) => {

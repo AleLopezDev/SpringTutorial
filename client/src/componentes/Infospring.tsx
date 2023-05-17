@@ -16,7 +16,7 @@ const Infospring = () => {
         </strong>
       </div>
 
-      <div id="info" className="flex justify-center mt-20 mb-[100px]">
+      <div id="info" className="flex justify-center mt-20 mb-[100px] ">
         {/* Contenedor columnas */}
         <div className="flex flex-col">
           {/* Primera Linea */}
