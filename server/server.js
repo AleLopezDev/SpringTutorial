@@ -52,18 +52,74 @@ app.get("/api/lecciones", (req, res) => {
 });
 
 app.post("/api/progreso", (req, res) => {
-  const { usuario_id, leccion_id } = req.body;
+  const { usuario_id, seccion_id } = req.body;
 
+  // Verificar si todas las lecciones en la sección han sido completadas
   connection.query(
-    "INSERT INTO progreso (usuario_id, leccion_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE leccion_id = ?",
-    [usuario_id, leccion_id, leccion_id],
+    "SELECT COUNT(*) as totalLecciones FROM lecciones WHERE seccion_id = ?",
+    [seccion_id],
     (error, results) => {
       if (error) {
-        console.error("Error al actualizar el progreso:", error);
-        res.status(500).send("Error al actualizar el progreso");
+        console.error("Error al verificar las lecciones:", error);
+        res.status(500).send("Error al verificar las lecciones");
         return;
       }
-      res.json({ message: "Progreso actualizado con éxito" });
+
+      const totalLecciones = results[0].totalLecciones;
+
+      connection.query(
+        "SELECT COUNT(*) as leccionesCompletadas FROM progreso WHERE usuario_id = ? AND seccion_id = ?",
+        [usuario_id, seccion_id],
+        (error, results) => {
+          if (error) {
+            console.error("Error al verificar el progreso:", error);
+            res.status(500).send("Error al verificar el progreso");
+            return;
+          }
+
+          const leccionesCompletadas = results[0].leccionesCompletadas;
+
+          if (leccionesCompletadas >= totalLecciones) {
+            // Todas las lecciones en la sección han sido completadas, marcar la sección como completada
+            connection.query(
+              "INSERT INTO progreso (usuario_id, seccion_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE seccion_id = ?",
+              [usuario_id, seccion_id, seccion_id],
+              (error, results) => {
+                if (error) {
+                  console.error("Error al actualizar el progreso:", error);
+                  res.status(500).send("Error al actualizar el progreso");
+                  return;
+                }
+                res.json({ message: "Progreso actualizado con éxito" });
+              }
+            );
+          } else {
+            // No todas las lecciones en la sección han sido completadas, no se puede marcar la sección como completada
+            res
+              .status(400)
+              .send(
+                "Debes completar todas las lecciones en la sección antes de poder marcarla como completada"
+              );
+          }
+        }
+      );
+    }
+  );
+});
+
+app.get("/api/lecciones/:id", (req, res) => {
+  const { id } = req.params;
+
+  connection.query(
+    "SELECT * FROM lecciones WHERE id = ?",
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener los datos:", error);
+        res.status(500).send("Error al obtener los datos");
+        return;
+      }
+      res.json(results[0]);
     }
   );
 });

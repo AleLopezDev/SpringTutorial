@@ -31,6 +31,7 @@
     "react-google-login": "^5.2.2",
     "react-height": "^3.0.2",
     "react-icons": "^4.8.0",
+    "react-markdown": "^8.0.7",
     "react-pdf": "^6.2.2",
     "react-player": "^2.12.0",
     "react-progressbar": "^15.4.1",

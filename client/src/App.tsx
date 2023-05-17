@@ -7,6 +7,7 @@ import Creador from "componentes/Creador";
 import AcercaDe from "componentes/AcercaDe";
 import Perfil from "componentes/Perfil";
 import Registro from "componentes/Registro";
+import LeccionPagina from "componentes/LeccionPagina";
 
 const Navbar = lazy(() => import("./componentes/Navbar"));
 const Login = lazy(() => import("./componentes/Login"));
@@ -72,6 +73,7 @@ function App() {
           <Route path="/curso" element={<PaginaCurso />} />
           <Route path="/perfil" element={<Perfil user={user} />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/leccion/:id" element={<LeccionPagina />} />
         </Routes>
       </Suspense>
     </Router>

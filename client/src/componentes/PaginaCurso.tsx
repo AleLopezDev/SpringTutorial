@@ -62,12 +62,12 @@ const PaginaCurso = () => {
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
 
-  const handleLeccionClick = (videoUrl: string) => {
-    setVideoSeleccionado(videoUrl);
+  const handleLeccionClick = (leccionId: number) => {
+    navigate(`/leccion/${leccionId}`);
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
+    <div className="flex justify-center items-center min-h-screen bg-green ">
       <div className="p-4 w-full md:w-3/4 lg:max-w-screen-lg mx-auto">
         <div className="mb-8 w-full">
           <ProgressBar completed={20} bgColor="#3ECC1B" height="20px" />
@@ -105,7 +105,7 @@ const PaginaCurso = () => {
                       <li
                         key={leccion.id}
                         className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600"
-                        onClick={() => handleLeccionClick(leccion.video_url)}
+                        onClick={() => handleLeccionClick(leccion.id)}
                       >
                         <span>{leccion.nombre}</span>
                         <FontAwesomeIcon icon={faCirclePlay} className="mt-1" />
