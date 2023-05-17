@@ -113,8 +113,6 @@ app.get("/api/lecciones/:id", (req, res) => {
   // Obtén el token de autenticación del encabezado de la solicitud
   const authHeader = req.headers.authorization;
 
-  console.log(authHeader);
-
   if (!authHeader) {
     res.status(401).send("No se proporcionó un token de autenticación");
     return;
@@ -205,7 +203,6 @@ app.get("/api/ultima_leccion_vista/:userId", (req, res) => {
 });
 
 app.post("/api/registro", async (req, res) => {
-  console.log("Recibida solicitud de registro");
   const { nombre, correo_electronico, contrasena } = req.body;
 
   // Encriptar la contraseña

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
@@ -14,6 +14,7 @@ interface Leccion {
 const LeccionPage = () => {
   const { id } = useParams();
   const [leccion, setLeccion] = useState<Leccion | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null); // Obtener tiempo de video
 
   useEffect(() => {
     const fetchLeccion = async () => {
@@ -25,9 +26,30 @@ const LeccionPage = () => {
       );
       setLeccion(response.data);
     };
-
     fetchLeccion();
   }, [id]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      const currentTime = video.currentTime;
+      const duration = video.duration;
+
+      if (currentTime >= duration / 2) {
+        alert("Ya pasaste la mitad del video");
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+
+    // No olvides eliminar el controlador de eventos cuando el componente se desmonte
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, []);
 
   if (!leccion) {
     return (
@@ -47,6 +69,7 @@ const LeccionPage = () => {
           </h2>
           <div className="mt-2 md:w-[900px] ml-4">
             <video
+              ref={videoRef}
               className="w-full h-full rounded"
               src={leccion.video_url}
               controls
@@ -70,7 +93,7 @@ const LeccionPage = () => {
               h2: ({ node, ...props }) => (
                 // eslint-disable-next-line jsx-a11y/heading-has-content
                 <h2
-                  className=" mt-6 text-lg md:text-3xl font-bold text-[#F7C30E] font-poppins mb-4 md:mb-3"
+                  className=" mt-6 text-lg md:text-xl font-bold text-[#F7C30E] font-poppins mb-4 md:mb-3"
                   {...props}
                 />
               ), // Estilo para h2

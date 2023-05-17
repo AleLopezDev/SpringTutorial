@@ -6,6 +6,7 @@ import {
   faCirclePlay,
   faChevronDown,
   faChevronUp,
+  faCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
@@ -71,6 +72,11 @@ const PaginaCurso = () => {
       // Aquí puedes manejar el caso en el que el token no esté en el almacenamiento local
       console.error("No se encontró el token en el almacenamiento local");
     }
+  };
+  const leccionCompletada = (leccionId: number) => {
+    // Aquí es donde buscarías en la base de datos o en el estado del componente para ver si la lección ha sido completada
+    // Por ahora, solo devolveremos `false` para todas las lecciones
+    return false;
   };
 
   useEffect(() => {
@@ -144,7 +150,7 @@ const PaginaCurso = () => {
             </h3>
             <p className="my-1">{seccion.descripcion}</p>
             {seccionExpandida === seccion.id && (
-              <div className="md:ml-4 mt-4">
+              <div className="mt-4">
                 <ul className="list-decimal list-inside">
                   {lecciones
                     .filter((leccion) => leccion.seccion_id === seccion.id)
@@ -154,7 +160,20 @@ const PaginaCurso = () => {
                         className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600"
                         onClick={() => handleLeccionClick(leccion.id)}
                       >
-                        <span>{leccion.nombre}</span>
+                        <div className="flex items-center">
+                          {leccionCompletada(leccion.id) ? (
+                            <FontAwesomeIcon
+                              icon={faCircle}
+                              className="text-black"
+                            />
+                          ) : (
+                            <FontAwesomeIcon
+                              icon={faCircle}
+                              className="text-transparent border border-black mr-2"
+                            />
+                          )}
+                          <span>{leccion.nombre}</span>
+                        </div>
                         <FontAwesomeIcon icon={faCirclePlay} className="mt-1" />
                       </li>
                     ))}
