@@ -8,6 +8,7 @@ import AcercaDe from "componentes/AcercaDe";
 import Perfil from "componentes/Perfil";
 import Registro from "componentes/Registro";
 import LeccionPagina from "componentes/LeccionPagina";
+import NotFound from "componentes/NotFound";
 
 const Navbar = lazy(() => import("./componentes/Navbar"));
 const Login = lazy(() => import("./componentes/Login"));
@@ -66,14 +67,62 @@ function App() {
           </div>
         }
       >
-        <Navbar user={user} />
         <Routes>
-          <Route path="/" element={<InicioConInfospring />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/curso" element={<PaginaCurso />} />
-          <Route path="/perfil" element={<Perfil user={user} />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/leccion/:id" element={<LeccionPagina />} />
+          <Route
+            path="/"
+            element={
+              <>
+                <Navbar user={user} />
+                <InicioConInfospring />
+              </>
+            }
+          />
+          <Route
+            path="/curso"
+            element={
+              <>
+                <Navbar user={user} />
+                <PaginaCurso />
+              </>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <>
+                <Navbar user={user} />
+                <Perfil user={user} />
+              </>
+            }
+          />
+          <Route
+            path="/leccion/:id"
+            element={
+              <>
+                <Navbar user={user} />
+                <LeccionPagina />
+              </>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <>
+                <Navbar user={user} />
+                <Login />
+              </>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <>
+                <Navbar user={user} />
+                <Registro />
+              </>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </Router>

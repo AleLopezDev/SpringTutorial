@@ -44,7 +44,7 @@ const Login = () => {
 
         localStorage.setItem("user", JSON.stringify(datosUsuario));
         navigate("/"); // Navegar a la página de inicio
-        //window.location.reload();
+        window.location.reload();
       } else {
         // Establecer el mensaje de error según el código de estado de la respuesta
         if (respuesta.status === 401) {

@@ -135,26 +135,46 @@ app.get("/api/lecciones/:id", (req, res) => {
           res.status(500).send("Error al obtener los datos");
           return;
         }
+
+        // Si no se encontró ninguna lección con el ID proporcionado, devolver un error
+        if (results.length === 0) {
+          res.status(404).send("Lección no encontrada");
+          return;
+        }
+
         // Actualizar la última lección vista por el usuario
-        connection.query(
-          "UPDATE usuarios SET ultima_leccion_vista = ? WHERE id = ?",
-          [id, userId],
-          (error) => {
-            if (error) {
-              console.error(
-                "Error al actualizar la última lección vista:",
-                error
-              );
-              // Podrías manejar el error de alguna manera aquí
+        if (id !== "null") {
+          connection.query(
+            "UPDATE usuarios SET ultima_leccion_vista = ? WHERE id = ?",
+            [id, userId],
+            (error) => {
+              if (error) {
+                console.error(
+                  "Error al actualizar la última lección vista:",
+                  error
+                );
+                res
+                  .status(500)
+                  .send("Error al actualizar la última lección vista");
+                return;
+              }
             }
-          }
-        );
+          );
+        } else {
+          console.error("Error: id de lección es null");
+          res.status(400).send("Error: id de lección es null");
+          return;
+        }
         res.json(results[0]);
       }
     );
   } catch (error) {
-    console.error("Error al decodificar el token de autenticación:", error);
-    res.status(401).send("Token de autenticación inválido");
+    if (error.name === "TokenExpiredError") {
+      res.status(401).send("Token de autenticación expirado");
+    } else {
+      console.error("Error al decodificar el token de autenticación:", error);
+      res.status(401).send("Token de autenticación inválido");
+    }
   }
 });
 
@@ -197,8 +217,12 @@ app.get("/api/ultima_leccion_vista/:userId", (req, res) => {
       }
     );
   } catch (error) {
-    console.error("Error al decodificar el token de autenticación:", error);
-    res.status(401).send("Token de autenticación inválido");
+    if (error.name === "TokenExpiredError") {
+      res.status(401).send("Token de autenticación expirado");
+    } else {
+      console.error("Error al decodificar el token de autenticación:", error);
+      res.status(401).send("Token de autenticación inválido");
+    }
   }
 });
 

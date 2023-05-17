@@ -26,7 +26,7 @@ interface Leccion {
 
 const PaginaCurso = () => {
   const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
-
+  const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
   const navigate = useNavigate();
 
   const estaAutenticado = () => {
@@ -59,10 +59,6 @@ const PaginaCurso = () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const response = await axios.get(
-          `http://localhost:5001/api/lecciones/${leccionId}`,
-          { headers: { Authorization: `Bearer ${token}` } } // Aquí es donde se incluye el token
-        );
         // Aquí puedes manejar la respuesta de la API
         navigate(`/leccion/${leccionId}`);
       } catch (error) {
@@ -105,6 +101,31 @@ const PaginaCurso = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchUltimaLeccion = async () => {
+      const user = JSON.parse(localStorage.getItem("user") || "{}"); // Obtén el usuario del localStorage
+      const userId = user.id;
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5001/api/ultima_leccion_vista/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const { leccionId } = response.data;
+          const leccionResponse = await axios.get(
+            `http://localhost:5001/api/lecciones/${leccionId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setUltimaLeccion(leccionResponse.data);
+        } catch (error) {
+          console.error("Error al obtener la última lección vista:", error);
+        }
+      }
+    };
+    fetchUltimaLeccion();
+  }, []);
+
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
 
@@ -114,10 +135,14 @@ const PaginaCurso = () => {
         <div className="flex justify-between items-center">
           <p className="font-poppins text-2xl mb-5 font-bold">Tu progreso :</p>
           <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded md:mb-6 mb-5"
+            className="bg-green-500 hover:bg-green-700 text-white text-base font-bold py-2 px-4 rounded md:mb-6 mb-5 flex items-center justify-center"
             onClick={handleContinueClick}
           >
-            Continuar
+            <div>
+              Continuar
+              <br />
+              {ultimaLeccion?.nombre}
+            </div>
             <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
           </button>
         </div>
