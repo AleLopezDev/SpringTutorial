@@ -1,16 +1,12 @@
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
-import { gapi } from "gapi-script";
 import UseAnimations from "react-useanimations";
 import loading from "react-useanimations/lib/loading";
 import Creador from "componentes/Creador";
 import AcercaDe from "componentes/AcercaDe";
 import Perfil from "componentes/Perfil";
 import Registro from "componentes/Registro";
-
-const clientId =
-  "328797629300-rk5fh38vfl6eqsnd2sf0c52n58qbbapa.apps.googleusercontent.com";
 
 const Navbar = lazy(() => import("./componentes/Navbar"));
 const Login = lazy(() => import("./componentes/Login"));
@@ -19,28 +15,18 @@ const PaginaCurso = lazy(() => import("./componentes/PaginaCurso"));
 const Paginaprincipal = lazy(() => import("./componentes/Inicio"));
 
 function App() {
-  /* Permitir inicio de sesion en google*/
-  useEffect(() => {
-    function start() {
-      gapi.client.init({
-        clientId: clientId,
-        scope: "",
-      });
-    }
-    gapi.load("client:auth2", start);
-  });
-
   const [user, setUser] = useState<any>(null);
 
+  // Carga inicial del usuario desde localStorage
   useEffect(() => {
-    // Verifica si hay información de usuario en localStorage
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+  }, []);
 
-    // Guarda la información de usuario en localStorage cuando cambia el estado del usuario
-
+  // Actualización de localStorage cuando cambia el estado del usuario
+  useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
     } else {
@@ -70,6 +56,7 @@ function App() {
 
   return (
     <Router>
+      {/* Configuracion de Rutas */}
       <Suspense
         fallback={
           <div className="flex justify-center items-center h-screen">
@@ -78,11 +65,10 @@ function App() {
           </div>
         }
       >
-        {/* Configuracion de Rutas */}
         <Navbar user={user} />
         <Routes>
           <Route path="/" element={<InicioConInfospring />} />
-          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/curso" element={<PaginaCurso />} />
           <Route path="/perfil" element={<Perfil user={user} />} />
           <Route path="/registro" element={<Registro />} />

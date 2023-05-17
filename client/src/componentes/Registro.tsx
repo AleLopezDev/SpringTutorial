@@ -35,7 +35,7 @@ const Registro = () => {
       return;
     }
 
-    const response = await fetch("http://localhost:5001/api/registro", {
+    const respuesta = await fetch("http://localhost:5001/api/registro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -45,24 +45,22 @@ const Registro = () => {
       }),
     });
 
-    if (response.ok) {
-      const user = await response.json();
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...user,
-          name: nombre,
-          email: correoElectronico,
-          imageUrl: logoUser,
-        })
-      );
+    if (respuesta.ok) {
+      const user = await respuesta.json();
+      const userObject = {
+        ...user,
+        name: nombre,
+        email: correoElectronico,
+        imageUrl: logoUser,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userObject));
 
       // Navegar a la página de inicio
       navigate("/");
-      window.location.reload();
     } else {
       // Hubo un error al registrar al usuario
-      const errorData = await response.json();
+      const errorData = await respuesta.json();
       if (errorData.error) {
         // Aquí puedes manejar diferentes tipos de errores
         setError(errorData.error);

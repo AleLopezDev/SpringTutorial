@@ -5,7 +5,12 @@ module.exports = {
   ],
   darkMode: "media",
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+        "source-sans-pro": ["Source Sans Pro", "sans-serif"],
+      },
+    },
   },
   plugins: [require("daisyui")],
 };

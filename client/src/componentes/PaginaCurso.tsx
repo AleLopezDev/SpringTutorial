@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Line } from "rc-progress";
+import ProgressBar from "@ramonak/react-progress-bar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCirclePlay,
@@ -68,19 +68,16 @@ const PaginaCurso = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <div className="p-4 w-full md:w-3/4 lg:w-[1100px] mx-auto">
-        <div className="mb-8" style={{ width: "100%" }}>
-          <Line
-            percent={20}
-            strokeColor="#3ECC1B"
-            strokeWidth={1}
-            className="h-4"
-          />
+      <div className="p-4 w-full md:w-3/4 lg:max-w-screen-lg mx-auto">
+        <div className="mb-8 w-full">
+          <ProgressBar completed={20} bgColor="#3ECC1B" height="20px" />
         </div>
-        {secciones.map((seccion) => (
+        {secciones.map((seccion, index) => (
           <div
             key={seccion.id}
-            className="border-black border border-collapse  py-4 px-4"
+            className={`py-4 px-4 border-t border-l border-r ${
+              index === secciones.length - 1 ? "border-b" : ""
+            } border-black`}
           >
             <h3
               className="text-2xl font-bold text-black cursor-pointer hover:text-green-500 flex justify-between items-center"
@@ -90,7 +87,7 @@ const PaginaCurso = () => {
                 )
               }
             >
-              <span>{seccion.nombre}</span>
+              <span className="font-source-sans-pro">{seccion.nombre}</span>
               <FontAwesomeIcon
                 icon={
                   seccionExpandida === seccion.id ? faChevronUp : faChevronDown
