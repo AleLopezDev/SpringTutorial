@@ -40,9 +40,12 @@ const Login = () => {
           name: user.nombre,
           email: user.correo_electronico,
           id: user.id,
+          imageUrl: user.imagen_url, // Almacena la URL de la imagen en lugar de la imagen en sí
         };
 
+        // Guarda la información del usuario en el almacenamiento local
         localStorage.setItem("user", JSON.stringify(datosUsuario));
+
         navigate("/"); // Navegar a la página de inicio
         window.location.reload();
       } else {

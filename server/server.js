@@ -51,56 +51,63 @@ app.get("/api/lecciones", (req, res) => {
   );
 });
 
-app.post("/api/progreso", (req, res) => {
-  const { usuario_id, seccion_id } = req.body;
+app.get("/api/pregunta_aleatoria/:leccionId", (req, res) => {
+  const { leccionId } = req.params;
 
-  // Verificar si todas las lecciones en la sección han sido completadas
   connection.query(
-    "SELECT COUNT(*) as totalLecciones FROM lecciones WHERE seccion_id = ?",
-    [seccion_id],
+    "SELECT * FROM preguntas WHERE leccion_id = ? ORDER BY RAND() LIMIT 1",
+    [leccionId],
     (error, results) => {
       if (error) {
-        console.error("Error al verificar las lecciones:", error);
-        res.status(500).send("Error al verificar las lecciones");
+        console.error("Error al obtener la pregunta:", error);
+        res.status(500).send("Error al obtener la pregunta");
+        return;
+      }
+
+      if (results.length === 0) {
+        res.status(404).send("No se encontraron preguntas para esta lección");
+        return;
+      }
+
+      res.json([results[0]]);
+    }
+  );
+});
+
+app.get("/api/progreso/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  // Obtén el número total de lecciones
+  connection.query(
+    "SELECT COUNT(*) as totalLecciones FROM lecciones",
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener el total de lecciones:", error);
+        res.status(500).send("Error al obtener el total de lecciones");
         return;
       }
 
       const totalLecciones = results[0].totalLecciones;
 
+      // Obtén el número de lecciones que el usuario ha completado
       connection.query(
-        "SELECT COUNT(*) as leccionesCompletadas FROM progreso WHERE usuario_id = ? AND seccion_id = ?",
-        [usuario_id, seccion_id],
+        "SELECT COUNT(*) as leccionesCompletadas FROM lecciones_completadas WHERE usuario_id = ?",
+        [userId],
         (error, results) => {
           if (error) {
-            console.error("Error al verificar el progreso:", error);
-            res.status(500).send("Error al verificar el progreso");
+            console.error("Error al obtener las lecciones completadas:", error);
+            res.status(500).send("Error al obtener las lecciones completadas");
             return;
           }
 
           const leccionesCompletadas = results[0].leccionesCompletadas;
 
-          if (leccionesCompletadas >= totalLecciones) {
-            // Todas las lecciones en la sección han sido completadas, marcar la sección como completada
-            connection.query(
-              "INSERT INTO progreso (usuario_id, seccion_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE seccion_id = ?",
-              [usuario_id, seccion_id, seccion_id],
-              (error, results) => {
-                if (error) {
-                  console.error("Error al actualizar el progreso:", error);
-                  res.status(500).send("Error al actualizar el progreso");
-                  return;
-                }
-                res.json({ message: "Progreso actualizado con éxito" });
-              }
-            );
-          } else {
-            // No todas las lecciones en la sección han sido completadas, no se puede marcar la sección como completada
-            res
-              .status(400)
-              .send(
-                "Debes completar todas las lecciones en la sección antes de poder marcarla como completada"
-              );
-          }
+          // Calcula el porcentaje de lecciones completadas
+          const porcentajeCompletado = Math.round(
+            (leccionesCompletadas / totalLecciones) * 100
+          );
+
+          res.json({ porcentajeCompletado });
         }
       );
     }
@@ -227,18 +234,17 @@ app.get("/api/ultima_leccion_vista/:userId", (req, res) => {
 });
 
 app.post("/api/registro", async (req, res) => {
-  const { nombre, correo_electronico, contrasena } = req.body;
+  const { nombre, correo_electronico, contrasena, imagen_url } = req.body;
 
   // Encriptar la contraseña
   const contrasenaEncriptada = await bcrypt.hash(contrasena, 10);
 
   // Almacenar el usuario en la base de datos
   connection.query(
-    "INSERT INTO usuarios (nombre, correo_electronico, contrasena) VALUES (?, ?, ?)",
-    [nombre, correo_electronico, contrasenaEncriptada],
+    "INSERT INTO usuarios (nombre, correo_electronico, contrasena, ultima_leccion_vista, imagen_url) VALUES (?, ?, ?, 1, ?)",
+    [nombre, correo_electronico, contrasenaEncriptada, imagen_url],
     (error, results) => {
       if (error) {
-        console.error("Error al registrar al usuario:", error);
         if (error.code === "ER_DUP_ENTRY") {
           res.status(400).send("El correo electrónico ya está en uso.");
         } else {
@@ -246,7 +252,22 @@ app.post("/api/registro", async (req, res) => {
         }
         return;
       }
-      res.json({ message: "Usuario registrado con éxito" });
+
+      // Crear un token de autenticación para el usuario
+      const token = jwt.sign({ id: results.insertId }, "your_jwt_secret", {
+        expiresIn: "1h",
+      });
+
+      // Enviar el token y los datos del usuario al cliente
+      res.json({
+        token,
+        user: {
+          id: results.insertId, // Obtener el ID del usuario recién registrado para crear el token
+          nombre: nombre,
+          correo_electronico: correo_electronico,
+          imagen_url: imagen_url,
+        },
+      });
     }
   );
 });
@@ -256,7 +277,7 @@ app.post("/api/login", async (req, res) => {
 
   // Buscar al usuario en la base de datos
   connection.query(
-    "SELECT * FROM usuarios WHERE correo_electronico = ? ",
+    "SELECT id, nombre, correo_electronico, contrasena, imagen_url FROM usuarios WHERE correo_electronico = ? ",
     [correo_electronico],
     async (error, results) => {
       if (error) {
@@ -280,8 +301,16 @@ app.post("/api/login", async (req, res) => {
             expiresIn: "1h",
           });
 
-          // Enviar el token al cliente
-          res.json({ token, user });
+          // Enviar el token y los datos del usuario al cliente
+          res.json({
+            token,
+            user: {
+              id: user.id,
+              nombre: user.nombre,
+              correo_electronico: user.correo_electronico,
+              imagen_url: user.imagen_url,
+            },
+          });
         } else {
           res.status(401).send("Contraseña incorrecta");
         }

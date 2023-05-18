@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoUser from "../assets/user.png";
 
 const Registro = () => {
   const [nombre, setNombre] = useState("");
@@ -42,28 +41,31 @@ const Registro = () => {
         nombre,
         correo_electronico: correoElectronico,
         contrasena,
+        imagen_url: "https://vestal-parenthesis.000webhostapp.com/user.png",
       }),
     });
 
     if (respuesta.ok) {
-      const user = await respuesta.json();
+      const { token, user } = await respuesta.json();
+
+      // Guarda el token de autenticación en el almacenamiento local
+      localStorage.setItem("token", token);
+
       const userObject = {
         ...user,
         name: nombre,
         email: correoElectronico,
-        imageUrl: logoUser,
+        imageUrl: "https://vestal-parenthesis.000webhostapp.com/user.png",
       };
 
       localStorage.setItem("user", JSON.stringify(userObject));
 
       // Navegar a la página de inicio
       navigate("/");
+      window.location.reload();
     } else {
-      // Hubo un error al registrar al usuario
-      const errorData = await respuesta.json();
-      if (errorData.error) {
-        // Aquí puedes manejar diferentes tipos de errores
-        setError(errorData.error);
+      if (respuesta.status === 400) {
+        setError("El correo electrónico ya está registrado.");
       }
     }
   };

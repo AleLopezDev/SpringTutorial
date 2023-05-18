@@ -28,11 +28,33 @@ const PaginaCurso = () => {
   const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
   const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
   const navigate = useNavigate();
+  const [progreso, setProgreso] = useState(0);
 
   const estaAutenticado = () => {
     const user = localStorage.getItem("user");
     return user !== null;
   };
+
+  const fetchProgreso = async () => {
+    const token = localStorage.getItem("token");
+    // ID
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const id = user.id;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5001/api/progreso/${id}`, // Asegúrate de tener el id del usuario
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProgreso(response.data.porcentajeCompletado);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProgreso();
+  }, []);
 
   const handleContinueClick = async () => {
     const user = localStorage.getItem("user");
@@ -148,7 +170,7 @@ const PaginaCurso = () => {
         </div>
 
         <div className="mb-8 w-full">
-          <ProgressBar completed={20} bgColor="#3ECC1B" height="20px" />
+          <ProgressBar completed={progreso} bgColor="#3ECC1B" height="20px" />
         </div>
         {secciones.map((seccion, index) => (
           <div
