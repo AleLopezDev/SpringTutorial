@@ -74,6 +74,50 @@ app.get("/api/pregunta_aleatoria/:leccionId", (req, res) => {
   );
 });
 
+app.post("/api/lecciones_completadas", (req, res) => {
+  const { leccion_id, usuario_id, completada } = req.body;
+
+  // Comprobar si el usuario ya ha completado esta lección
+  connection.query(
+    "SELECT * FROM lecciones_completadas WHERE leccion_id = ? AND usuario_id = ?",
+    [leccion_id, usuario_id],
+    (err, existingEntry) => {
+      if (err) {
+        console.error("Error al seleccionar de lecciones_completadas:", err);
+        res
+          .status(500)
+          .send("Hubo un error al comprobar si la lección fue completada.");
+        return;
+      }
+
+      if (existingEntry.length > 0) {
+        res
+          .status(409)
+          .send("La lección ya ha sido completada por este usuario.");
+        return;
+      }
+
+      const fecha_completada = new Date();
+
+      connection.query(
+        "INSERT INTO lecciones_completadas (leccion_id, usuario_id, fecha) VALUES (?, ?, ?)",
+        [leccion_id, usuario_id, fecha_completada],
+        (err) => {
+          if (err) {
+            console.error("Error al insertar en lecciones_completadas:", err);
+            res
+              .status(500)
+              .send("Hubo un error al registrar la lección completada.");
+            return;
+          }
+
+          res.status(201).send("Lección completada registrada con éxito.");
+        }
+      );
+    }
+  );
+});
+
 app.get("/api/progreso/:userId", (req, res) => {
   const { userId } = req.params;
 
@@ -89,7 +133,7 @@ app.get("/api/progreso/:userId", (req, res) => {
 
       const totalLecciones = results[0].totalLecciones;
 
-      // Obtén el número de lecciones que el usuario ha completado
+      // Obtén el número de lecciones que el usuario ha completado, si ha hecho bien el test la lección se considera completada
       connection.query(
         "SELECT COUNT(*) as leccionesCompletadas FROM lecciones_completadas WHERE usuario_id = ?",
         [userId],

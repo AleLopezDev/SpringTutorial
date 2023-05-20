@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import rehypeRaw from "rehype-raw";
 import DOMPurify from "dompurify";
+import "../cssPersonalizado/leccionpagina.css";
 
 interface Leccion {
   id: number;
@@ -28,23 +29,24 @@ interface Pregunta {
 
 const LeccionPage = () => {
   const [leccion, setLeccion] = useState<Leccion | null>(null);
-  const [leccionSiguiente, setLeccionSiguiente] = useState<Leccion | null>(
-    null
-  );
+  const [leccionSiguiente, setLeccionSiguiente] = useState<Leccion | null>();
   const [leccionAnterior, setLeccionAnterior] = useState<Leccion | null>(null);
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const [respuestasSeleccionadas, setRespuestasSeleccionadas] = useState<
     Record<number, string>
   >({});
+  const [respuestasMezcladas, setRespuestasMezcladas] = useState<
+    Record<number, { texto: string; esCorrecta: boolean }[]>
+  >({});
 
   const navegar = useNavigate();
   const contenidoSanitizado = DOMPurify.sanitize(leccion?.contenido || ""); // ANTI XSS
 
+  const { id } = useParams(); // Id de la lección de la URL
+
   const handleVuelta = () => {
     navegar("/curso");
   };
-
-  const { id } = useParams(); // Id de la lección de la URL
 
   const handleLeccionAnterior = () => {
     if (leccionAnterior) {
@@ -52,6 +54,39 @@ const LeccionPage = () => {
         navegar("/curso");
       } else {
         navegar(`/leccion/${leccionAnterior.id}`);
+      }
+    }
+  };
+
+  const mezclarRespuestas = (pregunta: Pregunta) => {
+    const respuestas = [
+      { texto: pregunta.respuesta_correcta, esCorrecta: true },
+      { texto: pregunta.respuesta_incorrecta1, esCorrecta: false },
+      { texto: pregunta.respuesta_incorrecta2, esCorrecta: false },
+      { texto: pregunta.respuesta_incorrecta3, esCorrecta: false },
+    ];
+
+    return respuestas.sort(() => Math.random() - 0.5);
+  };
+
+  const handleLeccionCompletada = async (leccionId: any) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const usuario_id = JSON.parse(localStorage.getItem("user") || "{}").id;
+
+    try {
+      await axios.post(
+        `http://localhost:5001/api/lecciones_completadas`,
+        { leccion_id: leccionId, usuario_id, completada: true },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Actualiza el estado o haz algo más aquí
+    } catch (error: any) {
+      if (error.response && error.response.status === 409) {
+        console.log("Lección ya completada");
+      } else {
+        console.error("Error al registrar lección completada:", error);
       }
     }
   };
@@ -72,8 +107,20 @@ const LeccionPage = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setPreguntas(response.data);
-      } catch (error) {
-        console.error(error);
+
+        // Mezcla las respuestas para cada pregunta y almacénalas en el estado
+        const nuevasRespuestasMezcladas: Record<
+          number,
+          { texto: string; esCorrecta: boolean }[]
+        > = {};
+        response.data.forEach((pregunta: Pregunta) => {
+          nuevasRespuestasMezcladas[pregunta.id] = mezclarRespuestas(pregunta);
+        });
+        setRespuestasMezcladas(nuevasRespuestasMezcladas);
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          console.error("No hay preguntas para esta lección");
+        }
       }
     };
     fetchPreguntaAleatoria();
@@ -89,7 +136,10 @@ const LeccionPage = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setLeccionSiguiente(response.data);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.response.status === 404) {
+          setLeccionSiguiente(null);
+        }
         console.error(error);
       }
     };
@@ -146,6 +196,14 @@ const LeccionPage = () => {
       ...prev,
       [preguntaId]: respuesta,
     }));
+
+    const pregunta = preguntas.find((pregunta) => pregunta.id === preguntaId);
+    if (
+      pregunta &&
+      pregunta.respuesta_correcta === pregunta[respuesta as keyof Pregunta]
+    ) {
+      handleLeccionCompletada(id); // Llama a handleLeccionCompletada si la respuesta es correcta
+    }
   };
 
   // Convierte el ID a un número
@@ -158,39 +216,40 @@ const LeccionPage = () => {
   }
 
   return (
-    <div className="bg-[#12111C] min-h-screen flex flex-col items-start justify-start py-12 px-4 sm:px-6 lg:px-8">
-      <div className="md:ml-80 space-y-8">
+    <div className="bg-[#12111C] min-h-screen flex flex-col items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8 mx-auto max-w-screen-xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-1/2">
         <div>
-          <div className="flex md:mb-6">
+          <div className="flex items-center mb-4">
             <FontAwesomeIcon
               icon={faArrowLeft}
-              className="text-[#F7C30E] rounded-lg border-2 py-1 px-1 border-[#F7C30E] ml-4 cursor-pointer"
+              className="text-[#F7C30E] rounded-lg border-2 py-1 px-1 border-[#F7C30E] cursor-pointer"
               onClick={handleVuelta}
             />
-            <p className="text-white w-full text-sm font-bold tracking-wider uppercase text-transform text-white/7 bg-[#13111C] m-0 left-0 md:left-auto pl-2 md:pl-0 pt-1 md:ml-3">
+            <p className="text-white text-sm font-bold tracking-wider uppercase text-transform text-white/7 bg-[#13111C] m-0 pl-2 pt-1 ml-3 inline-block">
               INTRODUCCIÓN
             </p>
           </div>
-          <h2 className="mt-6 text-2xl md:text-4xl font-extrabold text-[#32FF00] ml-4 font-poppins mb-8 md:mb-8">
+
+          <h2 className="mt-6 text-2xl md:text-4xl font-extrabold text-[#32FF00] font-poppins mb-8 md:mb-8 inline-block">
             {leccion?.nombre}
           </h2>
 
-          <div className="mt-2 md:w-[900px] ml-4">
+          <div className="mt-2 w-full">
             <video
-              className="w-full h-full rounded"
+              className="h-full w-full rounded mx-auto"
               src={leccion?.video_url}
               controls
             />
           </div>
         </div>
-        <div className="mt-4 bg-#c3e0ae p-4 rounded-lg shadow-md md:w-[900px]">
+        <div className="mt-4 rounded-lg shadow-md w-full ">
           <ReactMarkdown
             className="text-white text-lg"
             components={{
               h1: ({ node, ...props }) => (
                 // eslint-disable-next-line jsx-a11y/heading-has-content
                 <h1
-                  className="md:mt-10 text-2xl md:text-4xl font-extrabold text-[#32FF00] font-poppins mb-8 mt-10 md:mb-12"
+                  className="md:mt-10 text-2xl md:text-4xl font-extrabold text-[#32FF00] font-poppins mb-8 mt-10 md:mb-12 inline-block"
                   {...props}
                 />
               ), // Estilo para h1
@@ -198,10 +257,18 @@ const LeccionPage = () => {
               h2: ({ node, ...props }) => (
                 // eslint-disable-next-line jsx-a11y/heading-has-content
                 <h2
-                  className=" mt-6 text-lg md:text-xl font-bold text-[#F7C30E] font-poppins mb-4 md:mb-3"
+                  className=" mt-6 text-lg md:text-xl font-bold text-[#F7C30E] font-poppins mb-4 md:mb-3 inline-block"
                   {...props}
                 />
               ), // Estilo para h2
+
+              h3: ({ node, ...props }) => (
+                // eslint-disable-next-line jsx-a11y/heading-has-content
+                <h3
+                  className="mt-6 text-lg md:text-lg font-bold text-green-600 font-poppins mb-4 md:mb-3"
+                  {...props}
+                />
+              ), // Estilo para h3
 
               a: ({ node, ...props }) => (
                 // eslint-disable-next-line jsx-a11y/anchor-has-content
@@ -210,6 +277,12 @@ const LeccionPage = () => {
                   {...props}
                 />
               ), // Estilo para enlaces
+              pre: ({ node, ...props }) => (
+                <pre
+                  className="whitespace-pre-wrap overflow-x-auto word-break"
+                  {...props}
+                />
+              ), // Estilo para pre
             }}
             rehypePlugins={[rehypeRaw]}
           >
@@ -218,7 +291,7 @@ const LeccionPage = () => {
         </div>
 
         {/* Aquí es donde agregamos el div para el minitest */}
-        <div className="mt-8 p-4 rounded-lg shadow-md md:w-[900px] relative border-2 border-white">
+        <div className="mt-8 p-4 rounded-lg shadow-md w-full sm:w-3/4 md:w-1/2 lg:w-2/3 xl:w-[900px] mx-auto relative border-2 border-white">
           <h2 className="text-2xl font-bold text-center mb-4 flex justify-center items-center absolute top-[-22px] bg-[#12111C] px-2 text-orange-500">
             <FontAwesomeIcon icon={faVial} className="mr-2 text-orange-500" />{" "}
             Minitest
@@ -226,33 +299,29 @@ const LeccionPage = () => {
           {preguntas.map((pregunta) => (
             <div key={pregunta.id}>
               <p className="text-white mb-2">{pregunta.pregunta}</p>
-              {[
-                "respuesta_correcta",
-                "respuesta_incorrecta1",
-                "respuesta_incorrecta2",
-                "respuesta_incorrecta3",
-              ].map((respuesta) => (
+              {respuestasMezcladas[pregunta.id].map((respuesta) => (
                 <button
-                  key={respuesta}
+                  key={respuesta.texto}
                   className={`my-2 p-2 w-full text-left ${
-                    respuestasSeleccionadas[pregunta.id] === respuesta
-                      ? respuesta === "respuesta_correcta"
+                    respuestasSeleccionadas[pregunta.id] === respuesta.texto
+                      ? respuesta.esCorrecta
                         ? "bg-green-500"
                         : "bg-red-500"
                       : "bg-gray-200"
                   }`}
                   onClick={() =>
-                    handleSeleccionarRespuesta(pregunta.id, respuesta)
+                    handleSeleccionarRespuesta(pregunta.id, respuesta.texto)
                   }
                 >
-                  {pregunta[respuesta as keyof Pregunta]}
+                  {respuesta.texto}
                 </button>
               ))}
             </div>
           ))}
         </div>
 
-        <footer className="flex justify-between pt-8 mt-8 border-t border-white/10 ml-4">
+        {/* Footer */}
+        <footer className="flex flex-col sm:flex-row justify-between pt-8 mt-8 border-t border-white/10">
           <div className="flex flex-col justify-between w-full md:w-[40%] ml-2 mr-2">
             <p className="text-xs tracking-widest uppercase text-medium text-white">
               Clase Anterior

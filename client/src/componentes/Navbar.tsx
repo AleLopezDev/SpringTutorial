@@ -14,7 +14,7 @@ const Navbar = ({ user }: { user: any }) => {
   };
 
   return (
-    <nav className="bg-[#12111C] px-4 flex justify-between items-center font-poppins py-4 lg:py-7">
+    <nav className="bg-[#12111C] px-4 flex justify-between items-center font-poppins py-4 lg:py-7 w-full">
       <div className="flex items-center md:ml-5 lg:ml-10">
         <FontAwesomeIcon icon={faLeaf} className="text-green-500 text-lg " />
         <div className="text-white text-sm md:text-base lg:text-lg ml-2 md:ml-3">
@@ -44,17 +44,19 @@ const Navbar = ({ user }: { user: any }) => {
             </Link>
           </li>
           <li>
-            <Link
-              activeClass="active"
-              to="creador"
-              spy={true}
-              smooth={true}
-              offset={-70}
-              duration={500}
-              className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
-            >
-              Creador
-            </Link>
+            <RouterLink to="/">
+              <Link
+                activeClass="active"
+                to="creador"
+                spy={true}
+                smooth={true}
+                offset={-70}
+                duration={500}
+                className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
+              >
+                Creador
+              </Link>
+            </RouterLink>
           </li>
           <li>
             <a

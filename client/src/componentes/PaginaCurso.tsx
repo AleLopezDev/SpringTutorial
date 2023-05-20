@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 
 interface Seccion {
   id: number;
@@ -57,13 +58,14 @@ const PaginaCurso = () => {
   }, []);
 
   const handleContinueClick = async () => {
-    const user = localStorage.getItem("user");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const id = user.id;
     const token = localStorage.getItem("token");
     if (user && token) {
-      const userId = JSON.parse(user).id;
+      // Obtén el id del usuario del almacenamiento local
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/ultima_leccion_vista/${userId}`,
+          `http://localhost:5001/api/ultima_leccion_vista/${id}`,
           { headers: { Authorization: `Bearer ${token}` } } // Aquí es donde se incluye el token
         );
         const { leccionId } = response.data;
@@ -140,13 +142,21 @@ const PaginaCurso = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setUltimaLeccion(leccionResponse.data);
-        } catch (error) {
-          console.error("Error al obtener la última lección vista:", error);
+        } catch (error: any) {
+          if (error.response && error.response.status === 401) {
+            // Si expira el token, elimina el usuario y el token del almacenamiento local y redirige al usuario a la página de inicio de sesión
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            window.location.reload();
+            navigate("/login");
+          } else {
+            console.error("Error al obtener la última lección vista:", error);
+          }
         }
       }
     };
     fetchUltimaLeccion();
-  }, []);
+  }, [navigate]);
 
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
@@ -157,21 +167,23 @@ const PaginaCurso = () => {
         <div className="flex justify-between items-center">
           <p className="font-poppins text-2xl mb-5 font-bold">Tu progreso :</p>
           <button
-            className="bg-green-500 hover:bg-green-700 text-white text-base font-bold py-2 px-4 rounded md:mb-6 mb-5 flex items-center justify-center"
+            className="bg-green-500 hover:bg-green-700 text-white text-sm md:text-base font-bold py-2 px-4 rounded mb-6 flex items-center justify-center"
             onClick={handleContinueClick}
           >
-            <div>
+            <div className="hidden md:block">
               Continuar
               <br />
               {ultimaLeccion?.nombre}
             </div>
+            <div className="md:hidden">Continuar</div>
             <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
           </button>
         </div>
 
-        <div className="mb-8 w-full">
+        <div className="mb-8 w-full mx-auto ">
           <ProgressBar completed={progreso} bgColor="#3ECC1B" height="20px" />
         </div>
+
         {secciones.map((seccion, index) => (
           <div
             key={seccion.id}
@@ -210,8 +222,8 @@ const PaginaCurso = () => {
                         <div className="flex items-center">
                           {leccionCompletada(leccion.id) ? (
                             <FontAwesomeIcon
-                              icon={faCircle}
-                              className="text-black"
+                              icon={faCheck}
+                              className="text-green-500"
                             />
                           ) : (
                             <FontAwesomeIcon

@@ -1,8 +1,18 @@
+import React, { useEffect, useState } from "react";
 import logo from "../assets/spring-logo.png";
 import { Fade } from "react-awesome-reveal";
 import { Link as RouterLink } from "react-router-dom";
 
 const Inicio = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const usuario = localStorage.getItem("user");
+    if (usuario) {
+      setUser(JSON.parse(usuario));
+    }
+  }, []);
+
   return (
     <Fade triggerOnce={false} duration={3000}>
       <div className="">
@@ -25,7 +35,7 @@ const Inicio = () => {
           <div className="flex justify-center mt-10">
             <RouterLink to="/curso">
               <button className="border-2 rounded-full px-8 py-4 bg-green-400 border-transparent">
-                ¡ Empezar Curso !
+                {user ? "¡ Continuar Curso !" : "¡ Empezar Curso !"}
               </button>
             </RouterLink>
           </div>
