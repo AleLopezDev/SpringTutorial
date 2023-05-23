@@ -40,7 +40,7 @@ const Navbar = ({ user }: { user: any }) => {
               duration={500}
               className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
             >
-              ¿Que es Spring Boot?
+              Comunidad
             </Link>
           </li>
           <li>
@@ -54,7 +54,7 @@ const Navbar = ({ user }: { user: any }) => {
                 duration={500}
                 className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
               >
-                Creador
+                Ranking
               </Link>
             </RouterLink>
           </li>
@@ -63,7 +63,7 @@ const Navbar = ({ user }: { user: any }) => {
               href="#acerca-de"
               className="text-white font-poppins py-4 px-6 transition-colors border-transparent hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid duration-700"
             >
-              Acerca de
+              FAQ
             </a>
           </li>
         </ul>

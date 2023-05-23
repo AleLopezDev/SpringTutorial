@@ -30,33 +30,40 @@ const PaginaCurso = () => {
   const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
   const navigate = useNavigate();
   const [progreso, setProgreso] = useState(0);
+  const [secciones, setSecciones] = useState<Seccion[]>([]);
+  const [lecciones, setLecciones] = useState<Leccion[]>([]);
+  const [leccionesCompletadas, setLeccionesCompletadas] = useState<number[]>(
+    []
+  );
 
-  const estaAutenticado = () => {
-    const user = localStorage.getItem("user");
-    return user !== null;
-  };
-
-  const fetchProgreso = async () => {
-    const token = localStorage.getItem("token");
-    // ID
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const id = user.id;
-
-    try {
-      const response = await axios.get(
-        `http://localhost:5001/api/progreso/${id}`, // Asegúrate de tener el id del usuario
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProgreso(response.data.porcentajeCompletado);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
+  // Guardar las lecciones completadas en el estado para poner el check
   useEffect(() => {
-    fetchProgreso();
+    const fetchLeccionesCompletadas = async () => {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = user.id;
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5001/api/lecciones_completadas/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          // Almacenar solo los IDs de las lecciones completadas en el estado
+          const leccionesCompletadasIds = response.data.map(
+            (leccion: { leccion_id: number }) => leccion.leccion_id
+          );
+          setLeccionesCompletadas(leccionesCompletadasIds);
+        } catch (error) {
+          console.error("Error al obtener las lecciones completadas:", error);
+        }
+      }
+    };
+
+    fetchLeccionesCompletadas();
   }, []);
 
+  // Boton continuar verde
   const handleContinueClick = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const id = user.id;
@@ -93,18 +100,38 @@ const PaginaCurso = () => {
       console.error("No se encontró el token en el almacenamiento local");
     }
   };
-  const leccionCompletada = (leccionId: number) => {
-    // Aquí es donde buscarías en la base de datos o en el estado del componente para ver si la lección ha sido completada
-    // Por ahora, solo devolveremos `false` para todas las lecciones
-    return false;
-  };
 
+  // Comprobar si esta autenticado
   useEffect(() => {
-    if (!estaAutenticado()) {
+    const usuario = JSON.parse(localStorage.getItem("user") || "{}"); // Las llaves vacías son para evitar errores si el usuario no existe
+    // Si no hay usuario, redirecciona a la página de inicio de sesión
+    if (!usuario || !usuario.id) {
       navigate("/login");
     }
   }, [navigate]);
 
+  // Obtener progreso
+  useEffect(() => {
+    const fetchProgreso = async () => {
+      const token = localStorage.getItem("token");
+      // ID
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const id = user.id;
+
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/progreso/${id}`, // Asegúrate de tener el id del usuario
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProgreso(response.data.porcentajeCompletado);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProgreso();
+  }, []);
+
+  // Rellenar secciones con sus lecciones
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -125,6 +152,7 @@ const PaginaCurso = () => {
     fetchData();
   }, []);
 
+  // Obtener la última lección vista
   useEffect(() => {
     const fetchUltimaLeccion = async () => {
       const user = JSON.parse(localStorage.getItem("user") || "{}"); // Obtén el usuario del localStorage
@@ -158,9 +186,6 @@ const PaginaCurso = () => {
     fetchUltimaLeccion();
   }, [navigate]);
 
-  const [secciones, setSecciones] = useState<Seccion[]>([]);
-  const [lecciones, setLecciones] = useState<Leccion[]>([]);
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-green ">
       <div className="p-4 w-full md:w-3/4 lg:max-w-screen-lg mx-auto">
@@ -180,7 +205,18 @@ const PaginaCurso = () => {
           </button>
         </div>
 
-        <div className="mb-8 w-full mx-auto ">
+        {/* Barra de progreso en moviles*/}
+        <div className="mb-8 w-full mx-auto md:hidden">
+          <ProgressBar
+            completed={progreso}
+            bgColor="#3ECC1B"
+            height="20px"
+            isLabelVisible={false}
+          />
+        </div>
+
+        {/* Barra de progreso en desktop*/}
+        <div className="mb-8 w-full mx-auto hidden md:block">
           <ProgressBar completed={progreso} bgColor="#3ECC1B" height="20px" />
         </div>
 
@@ -220,10 +256,10 @@ const PaginaCurso = () => {
                         onClick={() => handleLeccionClick(leccion.id)}
                       >
                         <div className="flex items-center">
-                          {leccionCompletada(leccion.id) ? (
+                          {leccionesCompletadas.includes(leccion.id) ? (
                             <FontAwesomeIcon
                               icon={faCheck}
-                              className="text-green-500"
+                              className="text-green-500 mr-2"
                             />
                           ) : (
                             <FontAwesomeIcon

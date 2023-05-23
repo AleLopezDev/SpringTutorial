@@ -19,7 +19,7 @@ const Creador = () => {
         </div>
 
         {/* Contenedor Texto */}
-        <div className="w-full lg:w-[400px] py-4 ">
+        <div className="w-full lg:w-[400px] py-4 px-6">
           <p className="text-lg leading-relaxed lg:max-w-[400px] mx-auto my-auto">
             ¡Hola! Soy Alejandro, tengo 20 años y actualmente vivo en Málaga,
             España. Soy un gran apasionado de la informática y estudio en el

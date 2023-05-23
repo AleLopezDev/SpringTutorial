@@ -38,6 +38,8 @@ const LeccionPage = () => {
   const [respuestasMezcladas, setRespuestasMezcladas] = useState<
     Record<number, { texto: string; esCorrecta: boolean }[]>
   >({});
+  const [showMinitest, setShowMinitest] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const navegar = useNavigate();
   const contenidoSanitizado = DOMPurify.sanitize(leccion?.contenido || ""); // ANTI XSS
@@ -48,15 +50,13 @@ const LeccionPage = () => {
     navegar("/curso");
   };
 
-  const handleLeccionAnterior = () => {
-    if (leccionAnterior) {
-      if (leccionAnterior.nombre === "Curso") {
-        navegar("/curso");
-      } else {
-        navegar(`/leccion/${leccionAnterior.id}`);
-      }
+  useEffect(() => {
+    const usuario = JSON.parse(localStorage.getItem("user") || "{}"); // Las llaves vacías son para evitar errores si el usuario no existe
+    // Si no hay usuario, redirecciona a la página de inicio de sesión
+    if (!usuario || !usuario.id) {
+      navegar("/login");
     }
-  };
+  }, [navegar]);
 
   const mezclarRespuestas = (pregunta: Pregunta) => {
     const respuestas = [
@@ -91,40 +91,22 @@ const LeccionPage = () => {
     }
   };
 
+  // MANEJADOR LECCIONES ANTERIOR Y SIGUIENTE (PAGINACIÓN)
+  const handleLeccionAnterior = () => {
+    if (leccionAnterior) {
+      if (leccionAnterior.nombre === "Curso") {
+        navegar("/curso");
+      } else {
+        navegar(`/leccion/${leccionAnterior.id}`);
+      }
+    }
+  };
+
   const handleLeccionSiguiente = () => {
     if (leccionSiguiente) {
       navegar(`/leccion/${leccionSiguiente.id}`);
     }
   };
-
-  useEffect(() => {
-    const fetchPreguntaAleatoria = async () => {
-      const token = localStorage.getItem("token");
-
-      try {
-        const response = await axios.get(
-          `http://localhost:5001/api/pregunta_aleatoria/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setPreguntas(response.data);
-
-        // Mezcla las respuestas para cada pregunta y almacénalas en el estado
-        const nuevasRespuestasMezcladas: Record<
-          number,
-          { texto: string; esCorrecta: boolean }[]
-        > = {};
-        response.data.forEach((pregunta: Pregunta) => {
-          nuevasRespuestasMezcladas[pregunta.id] = mezclarRespuestas(pregunta);
-        });
-        setRespuestasMezcladas(nuevasRespuestasMezcladas);
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          console.error("No hay preguntas para esta lección");
-        }
-      }
-    };
-    fetchPreguntaAleatoria();
-  }, [id]);
 
   useEffect(() => {
     const fetchLeccionSiguiente = async () => {
@@ -163,6 +145,7 @@ const LeccionPage = () => {
         );
 
         setLeccionAnterior(response.data);
+        // Recarga pagina
       } catch (error) {
         console.error(error);
       }
@@ -191,6 +174,49 @@ const LeccionPage = () => {
     fetchLeccion();
   }, [id, navegar]);
 
+  // MANEJADOR DE PREGUNTAS Aleatorias
+
+  useEffect(() => {
+    const fetchPreguntaAleatoria = async () => {
+      const token = localStorage.getItem("token");
+
+      // Limpia el estado de las preguntas
+      setPreguntas([]);
+
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/pregunta_aleatoria/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setPreguntas(response.data);
+
+        // Mezcla las respuestas para cada pregunta y almacénalas en el estado
+        const nuevasRespuestasMezcladas: Record<
+          number,
+          { texto: string; esCorrecta: boolean }[]
+        > = {};
+        response.data.forEach((pregunta: Pregunta) => {
+          nuevasRespuestasMezcladas[pregunta.id] = mezclarRespuestas(pregunta);
+        });
+        setRespuestasMezcladas(nuevasRespuestasMezcladas);
+
+        // Verifica si el minitest está bloqueado para esta lección
+        const bloqueoMinitest = localStorage.getItem(`bloqueoMinitest_${id}`);
+        if (bloqueoMinitest && Number(bloqueoMinitest) > Date.now()) {
+          setShowMinitest(false);
+        } else {
+          setShowMinitest(true);
+        }
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          console.error("No hay preguntas para esta lección");
+        }
+      }
+    };
+    fetchPreguntaAleatoria();
+  }, [id]);
+
+  // MANEJADOR TIEMPO DE ESPERA PARA EL MINITEST, y UseEffect para bloquear el minitest durante 5 minutos si el usuario responde incorrectamente
   const handleSeleccionarRespuesta = (preguntaId: any, respuesta: any) => {
     setRespuestasSeleccionadas((prev) => ({
       ...prev,
@@ -198,13 +224,32 @@ const LeccionPage = () => {
     }));
 
     const pregunta = preguntas.find((pregunta) => pregunta.id === preguntaId);
-    if (
-      pregunta &&
-      pregunta.respuesta_correcta === pregunta[respuesta as keyof Pregunta]
-    ) {
+    if (pregunta && pregunta.respuesta_correcta === respuesta) {
       handleLeccionCompletada(id); // Llama a handleLeccionCompletada si la respuesta es correcta
+    } else {
+      // Temporizador de 5 minutos para evitar que el usuario intente el minitest de nuevo
+      const timestamp = Date.now() + 300000; // 5 minutos en milisegundos
+      localStorage.setItem(`bloqueoMinitest_${id}`, timestamp.toString()); // Guarda el tiempo de bloqueo en el almacenamiento local
+
+      // Oculta el minitest y muestra el mensaje de error
+      setShowMinitest(false);
+      setErrorMessage(
+        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera 5 minutos antes de intentar el minitest de nuevo."
+      );
     }
   };
+
+  useEffect(() => {
+    const bloqueoHasta = localStorage.getItem(`bloqueoMinitest_${id}`);
+    if (bloqueoHasta && new Date().getTime() < Number(bloqueoHasta)) {
+      setErrorMessage(
+        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera 5 minutos antes de intentar el minitest de nuevo."
+      );
+      setShowMinitest(false);
+    } else {
+      setShowMinitest(true);
+    }
+  }, [id]);
 
   // Convierte el ID a un número
   const idNumber = Number(id);
@@ -291,34 +336,41 @@ const LeccionPage = () => {
         </div>
 
         {/* Aquí es donde agregamos el div para el minitest */}
-        <div className="mt-8 p-4 rounded-lg shadow-md w-full sm:w-3/4 md:w-1/2 lg:w-2/3 xl:w-[900px] mx-auto relative border-2 border-white">
-          <h2 className="text-2xl font-bold text-center mb-4 flex justify-center items-center absolute top-[-22px] bg-[#12111C] px-2 text-orange-500">
-            <FontAwesomeIcon icon={faVial} className="mr-2 text-orange-500" />{" "}
-            Minitest
-          </h2>
-          {preguntas.map((pregunta) => (
-            <div key={pregunta.id}>
-              <p className="text-white mb-2">{pregunta.pregunta}</p>
-              {respuestasMezcladas[pregunta.id].map((respuesta) => (
-                <button
-                  key={respuesta.texto}
-                  className={`my-2 p-2 w-full text-left ${
-                    respuestasSeleccionadas[pregunta.id] === respuesta.texto
-                      ? respuesta.esCorrecta
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                      : "bg-gray-200"
-                  }`}
-                  onClick={() =>
-                    handleSeleccionarRespuesta(pregunta.id, respuesta.texto)
-                  }
-                >
-                  {respuesta.texto}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+        {showMinitest ? (
+          <div className="mt-8 p-4 rounded-lg shadow-md w-full sm:w-3/4 md:w-1/2 lg:w-2/3 xl:w-[900px] mx-auto relative border-2 border-white">
+            <h2 className="text-2xl font-bold text-center mb-4 flex justify-center items-center absolute top-[-22px] bg-[#12111C] px-2 text-orange-500">
+              <FontAwesomeIcon icon={faVial} className="mr-2 text-orange-500" />{" "}
+              Minitest
+            </h2>
+            {preguntas.map((pregunta) => (
+              <div key={pregunta.id}>
+                <p className="text-white mb-2">{pregunta.pregunta}</p>
+                {respuestasMezcladas[pregunta.id].map((respuesta) => (
+                  <button
+                    key={respuesta.texto}
+                    className={`my-2 p-2 w-full text-left ${
+                      respuestasSeleccionadas[pregunta.id] === respuesta.texto
+                        ? respuesta.esCorrecta
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                        : "bg-gray-200"
+                    }`}
+                    onClick={() =>
+                      handleSeleccionarRespuesta(pregunta.id, respuesta.texto)
+                    }
+                  >
+                    {respuesta.texto}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Oculta el minitest
+          <div>
+            <p className="text-red-500 text-center mt-4">{errorMessage}</p>
+          </div>
+        )}
 
         {/* Footer */}
         <footer className="flex flex-col sm:flex-row justify-between pt-8 mt-8 border-t border-white/10">

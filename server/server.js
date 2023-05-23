@@ -3,10 +3,20 @@ const mysql = require("mysql2");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Configura el transporte de correo
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "aprendespringboot@gmail.com", // Tu correo electrónico
+    pass: "kxhrchihfvddicyx", // Tu contraseña
+  },
+});
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -21,6 +31,21 @@ connection.connect((error) => {
     return;
   }
   console.log("Conexión exitosa a la base de datos");
+});
+
+app.get("/api/examenes/:seccion_id", (req, res) => {
+  connection.query(
+    "SELECT * FROM examenes WHERE seccion_id = ?",
+    [req.params.seccion_id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener los datos:", error);
+        res.status(500).send("Error al obtener los datos");
+        return;
+      }
+      res.json(results);
+    }
+  );
 });
 
 app.get("/api/secciones", (req, res) => {
@@ -50,6 +75,23 @@ app.get("/api/lecciones", (req, res) => {
     }
   );
 });
+app.get("/api/lecciones_completadas/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  connection.query(
+    "SELECT * FROM lecciones_completadas WHERE usuario_id = ?",
+    [userId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener las lecciones completadas:", error);
+        res.status(500).send("Error al obtener las lecciones completadas");
+        return;
+      }
+
+      res.json(results); // Devuelve todos los registros obtenidos
+    }
+  );
+});
 
 app.get("/api/pregunta_aleatoria/:leccionId", (req, res) => {
   const { leccionId } = req.params;
@@ -74,6 +116,7 @@ app.get("/api/pregunta_aleatoria/:leccionId", (req, res) => {
   );
 });
 
+// Insertar las lecciones completadas por el usuario
 app.post("/api/lecciones_completadas", (req, res) => {
   const { leccion_id, usuario_id, completada } = req.body;
 
@@ -297,9 +340,25 @@ app.post("/api/registro", async (req, res) => {
         return;
       }
 
+      // Después de que el registro del usuario se complete con éxito:
+      let mailOptions = {
+        from: "aprendespringboot@gmail.com",
+        to: req.body.correo_electronico, // correo del usuario
+        subject: "Registro Exitoso",
+        text: `Hola ${req.body.nombre}, ¡bienvenido! Te has registrado con éxito.`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Correo enviado: " + info.response);
+        }
+      });
+
       // Crear un token de autenticación para el usuario
       const token = jwt.sign({ id: results.insertId }, "your_jwt_secret", {
-        expiresIn: "1h",
+        expiresIn: "2h",
       });
 
       // Enviar el token y los datos del usuario al cliente
