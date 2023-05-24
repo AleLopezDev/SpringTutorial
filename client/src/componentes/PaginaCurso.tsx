@@ -8,7 +8,7 @@ import {
   faChevronUp,
   faCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 
@@ -25,6 +25,12 @@ interface Leccion {
   video_url: string;
 }
 
+interface Examen {
+  id: number;
+  seccion_id: number;
+  nombre: string;
+}
+
 const PaginaCurso = () => {
   const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
   const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
@@ -32,6 +38,7 @@ const PaginaCurso = () => {
   const [progreso, setProgreso] = useState(0);
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
+  const [examenes, setExamenes] = useState<Examen[]>([]);
   const [leccionesCompletadas, setLeccionesCompletadas] = useState<number[]>(
     []
   );
@@ -132,6 +139,7 @@ const PaginaCurso = () => {
   }, []);
 
   // Rellenar secciones con sus lecciones
+  // Rellenar secciones con sus lecciones y examen
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,6 +152,11 @@ const PaginaCurso = () => {
           "http://localhost:5001/api/lecciones"
         );
         setLecciones(leccionesResponse.data);
+
+        const examenesResponse = await axios.get<Examen[]>(
+          "http://localhost:5001/api/examenes"
+        );
+        setExamenes(examenesResponse.data);
       } catch (error) {
         console.error("Error al obtener datos:", error);
       }
@@ -272,6 +285,14 @@ const PaginaCurso = () => {
                         <FontAwesomeIcon icon={faCirclePlay} className="mt-1" />
                       </li>
                     ))}
+                  <li className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600">
+                    <div className="flex items-center">
+                      <span>Examen final</span>
+                    </div>
+                    <Link to={`/seccion/${seccion.id}/examen`}>
+                      Iniciar Examen
+                    </Link>
+                  </li>
                 </ul>
               </div>
             )}

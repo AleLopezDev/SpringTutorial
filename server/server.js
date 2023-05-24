@@ -424,6 +424,43 @@ app.post("/api/login", async (req, res) => {
   );
 });
 
+// Relacionado con los examenes
+app.get("/api/examen/:seccionId", (req, res) => {
+  const { seccionId } = req.params;
+
+  connection.query(
+    "SELECT * FROM Examenes WHERE seccion_id = ?",
+    [seccionId],
+    (error, examenes) => {
+      if (error) {
+        console.error("Error al obtener los examenes:", error);
+        res.status(500).send("Error al obtener los examenes");
+        return;
+      }
+
+      res.json(examenes);
+    }
+  );
+});
+
+app.get("/api/PreguntasExamen/:examenId", (req, res) => {
+  const { examenId } = req.params;
+
+  connection.query(
+    "SELECT * FROM PreguntasExamen WHERE idExamen = ?",
+    [examenId],
+    (error, preguntas) => {
+      if (error) {
+        console.error("Error al obtener las preguntas:", error);
+        res.status(500).send("Error al obtener las preguntas");
+        return;
+      }
+
+      res.json(preguntas);
+    }
+  );
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Api ejecutándose en el puerto ${PORT}`);
