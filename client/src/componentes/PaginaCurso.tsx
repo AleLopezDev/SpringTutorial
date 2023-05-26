@@ -7,10 +7,13 @@ import {
   faChevronDown,
   faChevronUp,
   faCircle,
+  faCheck,
+  faArrowRight,
+  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { Notyf } from "notyf";
+import "notyf/notyf.min.css";
 
 interface Seccion {
   id: number;
@@ -43,6 +46,13 @@ const PaginaCurso = () => {
   const handleExamenClick = (examenId: any) => {
     navigate(`/examen/${examenId}`);
   };
+  const notyf = new Notyf({
+    position: {
+      x: "center",
+      y: "top",
+    },
+  });
+  // Notificaciones
 
   // Obtener las secciones completadas cuando se carga el componente
   useEffect(() => {
@@ -109,7 +119,7 @@ const PaginaCurso = () => {
       seccionAnteriorId &&
       !seccionesCompletadas.includes(seccionAnteriorId)
     ) {
-      alert(
+      notyf.error(
         "Debes completar la sección anterior antes de poder acceder a esta sección."
       );
     } else {
