@@ -261,7 +261,7 @@ const LeccionPage = () => {
   }
 
   return (
-    <div className="bg-[#12111C] min-h-screen flex flex-col items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#12111C] min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="space-y-8 mx-auto max-w-screen-xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-1/2">
         <div>
           <div className="flex items-center mb-4">

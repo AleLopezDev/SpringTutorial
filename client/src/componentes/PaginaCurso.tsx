@@ -8,7 +8,7 @@ import {
   faChevronUp,
   faCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 
@@ -25,12 +25,6 @@ interface Leccion {
   video_url: string;
 }
 
-interface Examen {
-  id: number;
-  seccion_id: number;
-  nombre: string;
-}
-
 const PaginaCurso = () => {
   const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
   const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
@@ -38,10 +32,44 @@ const PaginaCurso = () => {
   const [progreso, setProgreso] = useState(0);
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
-  const [examenes, setExamenes] = useState<Examen[]>([]);
   const [leccionesCompletadas, setLeccionesCompletadas] = useState<number[]>(
     []
   );
+  // Estado para almacenar las secciones completadas
+  const [seccionesCompletadas, setSeccionesCompletadas] = useState<number[]>(
+    []
+  );
+
+  const handleExamenClick = (examenId: any) => {
+    navigate(`/examen/${examenId}`);
+  };
+
+  // Obtener las secciones completadas cuando se carga el componente
+  useEffect(() => {
+    const fetchSeccionesCompletadas = async () => {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = user.id;
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5001/api/secciones_completadas/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          // Almacenar solo los IDs de las secciones completadas en el estado
+          const seccionesCompletadasIds = response.data.map(
+            (seccion: { seccion_id: number }) => seccion.seccion_id
+          );
+          setSeccionesCompletadas(seccionesCompletadasIds);
+        } catch (error) {
+          console.error("Error al obtener las secciones completadas:", error);
+        }
+      }
+    };
+
+    fetchSeccionesCompletadas();
+  }, []);
 
   // Guardar las lecciones completadas en el estado para poner el check
   useEffect(() => {
@@ -69,6 +97,25 @@ const PaginaCurso = () => {
 
     fetchLeccionesCompletadas();
   }, []);
+
+  // Comprobar si la sección anterior está completa cuando se hace clic en una sección
+  const handleSeccionClick = (seccionId: number) => {
+    const seccionIndex = secciones.findIndex(
+      (seccion) => seccion.id === seccionId
+    );
+    const seccionAnteriorId = secciones[seccionIndex - 1]?.id;
+
+    if (
+      seccionAnteriorId &&
+      !seccionesCompletadas.includes(seccionAnteriorId)
+    ) {
+      alert(
+        "Debes completar la sección anterior antes de poder acceder a esta sección."
+      );
+    } else {
+      setSeccionExpandida(seccionId === seccionExpandida ? null : seccionId);
+    }
+  };
 
   // Boton continuar verde
   const handleContinueClick = async () => {
@@ -152,11 +199,6 @@ const PaginaCurso = () => {
           "http://localhost:5001/api/lecciones"
         );
         setLecciones(leccionesResponse.data);
-
-        const examenesResponse = await axios.get<Examen[]>(
-          "http://localhost:5001/api/examenes"
-        );
-        setExamenes(examenesResponse.data);
       } catch (error) {
         console.error("Error al obtener datos:", error);
       }
@@ -188,8 +230,8 @@ const PaginaCurso = () => {
             // Si expira el token, elimina el usuario y el token del almacenamiento local y redirige al usuario a la página de inicio de sesión
             localStorage.removeItem("user");
             localStorage.removeItem("token");
-            window.location.reload();
             navigate("/login");
+            window.location.reload();
           } else {
             console.error("Error al obtener la última lección vista:", error);
           }
@@ -242,11 +284,7 @@ const PaginaCurso = () => {
           >
             <h3
               className="text-2xl font-bold text-black cursor-pointer hover:text-green-500 flex justify-between items-center"
-              onClick={() =>
-                setSeccionExpandida(
-                  seccion.id === seccionExpandida ? null : seccion.id
-                )
-              }
+              onClick={() => handleSeccionClick(seccion.id)}
             >
               <span className="font-source-sans-pro">{seccion.nombre}</span>
               <FontAwesomeIcon
@@ -285,13 +323,13 @@ const PaginaCurso = () => {
                         <FontAwesomeIcon icon={faCirclePlay} className="mt-1" />
                       </li>
                     ))}
-                  <li className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600">
+                  <li
+                    className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600"
+                    onClick={() => handleExamenClick(seccion.id)} // Suponiendo que examenId es la variable donde guardas el id del examen
+                  >
                     <div className="flex items-center">
                       <span>Examen final</span>
                     </div>
-                    <Link to={`/seccion/${seccion.id}/examen`}>
-                      Iniciar Examen
-                    </Link>
                   </li>
                 </ul>
               </div>

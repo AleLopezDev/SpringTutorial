@@ -9,6 +9,8 @@ import Perfil from "componentes/Perfil";
 import Registro from "componentes/Registro";
 import LeccionPagina from "componentes/LeccionPagina";
 import NotFound from "componentes/NotFound";
+import FAQ from "componentes/FAQ";
+import Examen from "componentes/ExamenComponente";
 
 const Navbar = lazy(() => import("./componentes/Navbar"));
 const Login = lazy(() => import("./componentes/Login"));
@@ -99,7 +101,6 @@ function App() {
             path="/leccion/:id"
             element={
               <>
-                <Navbar user={user} />
                 <LeccionPagina />
               </>
             }
@@ -122,6 +123,17 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/FAQ"
+            element={
+              <>
+                <Navbar user={user} />
+                <FAQ />
+              </>
+            }
+          />
+          <Route path="/examen/:id" element={<Examen />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

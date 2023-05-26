@@ -8,18 +8,18 @@ const Creador = () => {
         <p className="">¿ Quien soy ?</p>
       </strong>
 
-      <div className="flex flex-col lg:flex-row w-full justify-center lg:mt-24">
+      <div className="flex flex-col lg:flex-row justify-center items-stretch lg:mt-24">
         {/* Contenedor Imagen */}
-        <div className="w-full lg:w-2/5 py-4">
+        <div className="w-full lg:w-2/5 py-4 flex">
           <img
             src={yoImage}
             alt="Imagen de Alejandro"
-            className="w-[250px] h-[320px] rounded-lg md:w-[430px] md:h-[550px] md:rounded-lg mx-auto my-auto object-cover"
+            className="w-[350px] h-full rounded-lg md:w-[700px] md:rounded-lg mx-auto my-auto object-cover"
           />
         </div>
 
         {/* Contenedor Texto */}
-        <div className="w-full lg:w-[400px] py-4 px-6">
+        <div className="w-full lg:w-[400px] py-4 px-6 flex">
           <p className="text-lg leading-relaxed lg:max-w-[400px] mx-auto my-auto">
             ¡Hola! Soy Alejandro, tengo 20 años y actualmente vivo en Málaga,
             España. Soy un gran apasionado de la informática y estudio en el

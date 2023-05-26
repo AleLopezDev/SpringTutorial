@@ -72,7 +72,7 @@ const Registro = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 ">
-      <div className="bg-white p-8 rounded-lg shadow-md w-[500px] space-y-4">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full sm:w-3/4 md:w-1/2 lg:w-1/3 xl:w-[500px] space-y-4">
         <h1 className="text-2xl font-bold text-center mb-4">Registro</h1>
         <form onSubmit={registrar}>
           <input

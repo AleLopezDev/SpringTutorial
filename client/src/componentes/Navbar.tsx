@@ -59,12 +59,11 @@ const Navbar = ({ user }: { user: any }) => {
             </RouterLink>
           </li>
           <li>
-            <a
-              href="#acerca-de"
-              className="text-white font-poppins py-4 px-6 transition-colors border-transparent hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid duration-700"
-            >
-              FAQ
-            </a>
+            <RouterLink to="/FAQ">
+              <span className="text-white font-poppins py-4 px-6 transition-colors border-transparent hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid duration-700">
+                FAQ
+              </span>
+            </RouterLink>
           </li>
         </ul>
       </div>

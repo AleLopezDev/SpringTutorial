@@ -424,6 +424,69 @@ app.post("/api/login", async (req, res) => {
   );
 });
 
+// Insertar las secciones completadas por el usuario
+app.post("/api/secciones_completadas", (req, res) => {
+  const { seccion_id, usuario_id } = req.body;
+
+  // Comprobar si el usuario ya ha completado esta sección
+  connection.query(
+    "SELECT * FROM secciones_completadas WHERE seccion_id = ? AND usuario_id = ?",
+    [seccion_id, usuario_id],
+    (err, existingEntry) => {
+      if (err) {
+        console.error("Error al seleccionar de secciones_completadas:", err);
+        res
+          .status(500)
+          .send("Hubo un error al comprobar si la sección fue completada.");
+        return;
+      }
+
+      if (existingEntry.length > 0) {
+        res
+          .status(409)
+          .send("La sección ya ha sido completada por este usuario.");
+        return;
+      }
+
+      const fecha_completada = new Date();
+
+      connection.query(
+        "INSERT INTO secciones_completadas (seccion_id, usuario_id, fecha_completada) VALUES (?, ?, ?)",
+        [seccion_id, usuario_id, fecha_completada],
+        (err) => {
+          if (err) {
+            console.error("Error al insertar en secciones_completadas:", err);
+            res
+              .status(500)
+              .send("Hubo un error al registrar la sección completada.");
+            return;
+          }
+
+          res.status(201).send("Sección completada registrada con éxito.");
+        }
+      );
+    }
+  );
+});
+
+app.get("/api/secciones_completadas/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  connection.query(
+    "SELECT * FROM secciones_completadas WHERE usuario_id = ?",
+    [userId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener las secciones completadas:", error);
+        res.status(500).send("Error al obtener las secciones completadas");
+        return;
+      }
+
+      res.json(results); // Devuelve todos los registros obtenidos
+    }
+  );
+});
+
 // Relacionado con los examenes
 app.get("/api/examen/:seccionId", (req, res) => {
   const { seccionId } = req.params;
@@ -457,6 +520,24 @@ app.get("/api/PreguntasExamen/:examenId", (req, res) => {
       }
 
       res.json(preguntas);
+    }
+  );
+});
+
+app.get("/api/RespuestasExamen/:preguntaId", (req, res) => {
+  const { preguntaId } = req.params;
+
+  connection.query(
+    "SELECT * FROM RespuestasExamen WHERE idPregunta = ?",
+    [preguntaId],
+    (error, respuestas) => {
+      if (error) {
+        console.error("Error al obtener las respuestas:", error);
+        res.status(500).send("Error al obtener las respuestas");
+        return;
+      }
+
+      res.json(respuestas);
     }
   );
 });
