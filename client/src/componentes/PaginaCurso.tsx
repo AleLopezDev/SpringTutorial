@@ -9,7 +9,6 @@ import {
   faCircle,
   faCheck,
   faArrowRight,
-  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { Notyf } from "notyf";
@@ -42,23 +41,40 @@ const PaginaCurso = () => {
   const [seccionesCompletadas, setSeccionesCompletadas] = useState<number[]>(
     []
   );
+  const [usuario, setUsuario] = useState(
+    JSON.parse(localStorage.getItem("user") || "{}")
+  );
 
   const handleExamenClick = (examenId: any) => {
     navigate(`/examen/${examenId}`);
   };
+
+  // Notificaciones
   const notyf = new Notyf({
     position: {
       x: "center",
       y: "top",
     },
   });
-  // Notificaciones
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
+    };
+
+    // Escucha los cambios en el almacenamiento local
+    window.addEventListener("storage", handleStorageChange);
+
+    // Limpia el oyente cuando se desmonta el componente
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // Obtener las secciones completadas cuando se carga el componente
   useEffect(() => {
     const fetchSeccionesCompletadas = async () => {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const userId = user.id;
+      const userId = usuario.id;
       const token = localStorage.getItem("token");
 
       if (token) {
@@ -79,13 +95,12 @@ const PaginaCurso = () => {
     };
 
     fetchSeccionesCompletadas();
-  }, []);
+  }, [usuario.id]);
 
   // Guardar las lecciones completadas en el estado para poner el check
   useEffect(() => {
     const fetchLeccionesCompletadas = async () => {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const userId = user.id;
+      const userId = usuario.id;
       const token = localStorage.getItem("token");
 
       if (token) {
@@ -106,7 +121,7 @@ const PaginaCurso = () => {
     };
 
     fetchLeccionesCompletadas();
-  }, []);
+  }, [usuario.id]);
 
   // Comprobar si la sección anterior está completa cuando se hace clic en una sección
   const handleSeccionClick = (seccionId: number) => {
@@ -129,10 +144,9 @@ const PaginaCurso = () => {
 
   // Boton continuar verde
   const handleContinueClick = async () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const id = user.id;
+    const id = usuario.id;
     const token = localStorage.getItem("token");
-    if (user && token) {
+    if (usuario && token) {
       // Obtén el id del usuario del almacenamiento local
       try {
         const response = await axios.get(
@@ -167,12 +181,10 @@ const PaginaCurso = () => {
 
   // Comprobar si esta autenticado
   useEffect(() => {
-    const usuario = JSON.parse(localStorage.getItem("user") || "{}"); // Las llaves vacías son para evitar errores si el usuario no existe
-    // Si no hay usuario, redirecciona a la página de inicio de sesión
     if (!usuario || !usuario.id) {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [navigate, usuario]);
 
   // Obtener progreso
   useEffect(() => {

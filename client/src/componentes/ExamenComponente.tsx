@@ -30,8 +30,25 @@ const ExamenComponente = () => {
   const [resultadosRespuestas, setResultadosRespuestas] = useState<{
     [key: number]: boolean;
   }>({});
-  const usuario = JSON.parse(localStorage.getItem("user") || "{}");
+  const [usuario, setUsuario] = useState(
+    JSON.parse(localStorage.getItem("user") || "{}")
+  );
   const navigate = useNavigate();
+
+  // Evitar que si se recarga la página se pierda el usuario
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
+    };
+
+    // Escucha los cambios en el almacenamiento local
+    window.addEventListener("storage", handleStorageChange);
+
+    // Limpia el oyente cuando se desmonta el componente
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // Comprobar si esta autenticado
   useEffect(() => {

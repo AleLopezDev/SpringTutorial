@@ -510,7 +510,7 @@ app.get("/api/PreguntasExamen/:examenId", (req, res) => {
   const { examenId } = req.params;
 
   connection.query(
-    "SELECT * FROM PreguntasExamen WHERE idExamen = ?",
+    "SELECT * FROM PreguntasExamen WHERE idExamen = ? ORDER BY RAND() LIMIT 5",
     [examenId],
     (error, preguntas) => {
       if (error) {
@@ -528,7 +528,7 @@ app.get("/api/RespuestasExamen/:preguntaId", (req, res) => {
   const { preguntaId } = req.params;
 
   connection.query(
-    "SELECT * FROM RespuestasExamen WHERE idPregunta = ?",
+    "SELECT * FROM RespuestasExamen WHERE idPregunta = ? ORDER BY RAND()",
     [preguntaId],
     (error, respuestas) => {
       if (error) {
