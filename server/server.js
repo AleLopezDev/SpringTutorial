@@ -542,6 +542,63 @@ app.get("/api/RespuestasExamen/:preguntaId", (req, res) => {
   );
 });
 
+// Obtener los exámenes completados por el usuario
+app.get("/api/examenes_completados/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  connection.query(
+    "SELECT * FROM examenes_completados WHERE usuario_id = ?",
+    [userId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener los exámenes completados:", error);
+        res.status(500).send("Error al obtener los exámenes completados");
+        return;
+      }
+
+      res.json(results); // Devuelve todos los registros obtenidos
+    }
+  );
+});
+
+app.post("/api/examenes_completados", (req, res) => {
+  const { examen_id, usuario_id } = req.body;
+
+  // Primero, verifica si el usuario ya ha completado el examen
+  connection.query(
+    "SELECT * FROM examenes_completados WHERE examen_id = ? AND usuario_id = ?",
+    [examen_id, usuario_id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al verificar el examen:", error);
+        res.status(500).send("Error al verificar el examen");
+        return;
+      }
+
+      // Si el usuario ya ha completado el examen, no se realiza la inserción
+      if (results.length > 0) {
+        res.status(409).send("El usuario ya ha completado este examen.");
+        return;
+      }
+
+      // Si el usuario no ha completado el examen, se realiza la inserción
+      connection.query(
+        "INSERT INTO examenes_completados (examen_id, usuario_id) VALUES (?, ?)",
+        [examen_id, usuario_id],
+        (error) => {
+          if (error) {
+            console.error("Error al marcar el examen como completado:", error);
+            res.status(500).send("Error al marcar el examen como completado");
+            return;
+          }
+
+          res.status(201).send("Examen marcado como completado con éxito.");
+        }
+      );
+    }
+  );
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Api ejecutándose en el puerto ${PORT}`);

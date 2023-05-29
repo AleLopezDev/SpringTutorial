@@ -8,6 +8,7 @@ import { faArrowLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import rehypeRaw from "rehype-raw";
 import DOMPurify from "dompurify";
 import "../cssPersonalizado/leccionpagina.css";
+import { getTiempoMinitest } from "../modelo/modelo";
 
 interface Leccion {
   id: number;
@@ -41,6 +42,9 @@ const LeccionPage = () => {
   const [showMinitest, setShowMinitest] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [usuario, setUsuario] = useState(
+    JSON.parse(localStorage.getItem("user") || "{}")
+  );
   const navegar = useNavigate();
   const contenidoSanitizado = DOMPurify.sanitize(leccion?.contenido || ""); // ANTI XSS
 
@@ -51,12 +55,24 @@ const LeccionPage = () => {
   };
 
   useEffect(() => {
-    const usuario = JSON.parse(localStorage.getItem("user") || "{}"); // Las llaves vacías son para evitar errores si el usuario no existe
-    // Si no hay usuario, redirecciona a la página de inicio de sesión
+    const handleStorageChange = () => {
+      setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
+    };
+
+    // Escucha los cambios en el almacenamiento local
+    window.addEventListener("storage", handleStorageChange);
+
+    // Limpia el oyente cuando se desmonta el componente
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!usuario || !usuario.id) {
       navegar("/login");
     }
-  }, [navegar]);
+  }, [navegar, usuario]);
 
   const mezclarRespuestas = (pregunta: Pregunta) => {
     const respuestas = [
@@ -228,13 +244,15 @@ const LeccionPage = () => {
       handleLeccionCompletada(id); // Llama a handleLeccionCompletada si la respuesta es correcta
     } else {
       // Temporizador de 5 minutos para evitar que el usuario intente el minitest de nuevo
-      const timestamp = Date.now() + 300000; // 5 minutos en milisegundos
+      const timestamp = Date.now() + getTiempoMinitest();
       localStorage.setItem(`bloqueoMinitest_${id}`, timestamp.toString()); // Guarda el tiempo de bloqueo en el almacenamiento local
 
       // Oculta el minitest y muestra el mensaje de error
       setShowMinitest(false);
       setErrorMessage(
-        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera 5 minutos antes de intentar el minitest de nuevo."
+        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera " +
+          getTiempoMinitest() / 60000 +
+          " minutos antes de intentar el minitest de nuevo."
       );
     }
   };
@@ -243,7 +261,9 @@ const LeccionPage = () => {
     const bloqueoHasta = localStorage.getItem(`bloqueoMinitest_${id}`);
     if (bloqueoHasta && new Date().getTime() < Number(bloqueoHasta)) {
       setErrorMessage(
-        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera 5 minutos antes de intentar el minitest de nuevo."
+        "La respuesta es incorrecta. Por favor, vuelve a leer la lección y espera " +
+          getTiempoMinitest() / 60000 +
+          " minutos antes de intentar el minitest de nuevo."
       );
       setShowMinitest(false);
     } else {
@@ -261,7 +281,7 @@ const LeccionPage = () => {
   }
 
   return (
-    <div className="bg-[#12111C] min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#12111C] min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ">
       <div className="space-y-8 mx-auto max-w-screen-xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-1/2">
         <div>
           <div className="flex items-center mb-4">

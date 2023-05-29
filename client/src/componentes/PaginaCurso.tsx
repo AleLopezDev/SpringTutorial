@@ -9,6 +9,7 @@ import {
   faCircle,
   faCheck,
   faArrowRight,
+  faFileAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { Notyf } from "notyf";
@@ -41,6 +42,8 @@ const PaginaCurso = () => {
   const [seccionesCompletadas, setSeccionesCompletadas] = useState<number[]>(
     []
   );
+  const [examenesCompletados, setExamenesCompletados] = useState<number[]>([]);
+
   const [usuario, setUsuario] = useState(
     JSON.parse(localStorage.getItem("user") || "{}")
   );
@@ -57,6 +60,7 @@ const PaginaCurso = () => {
     },
   });
 
+  // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
   useEffect(() => {
     const handleStorageChange = () => {
       setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
@@ -70,6 +74,30 @@ const PaginaCurso = () => {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    const fetchExamenesCompletados = async () => {
+      const userId = usuario.id;
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5001/api/examenes_completados/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const examenesCompletadosIds = response.data.map(
+            (examen: { examen_id: number }) => examen.examen_id
+          );
+          setExamenesCompletados(examenesCompletadosIds);
+        } catch (error) {
+          console.error("Error al obtener los exámenes completados:", error);
+        }
+      }
+    };
+
+    fetchExamenesCompletados();
+  }, [usuario.id]);
 
   // Obtener las secciones completadas cuando se carga el componente
   useEffect(() => {
@@ -164,6 +192,7 @@ const PaginaCurso = () => {
     }
   };
 
+  // Navegar a la lección
   const handleLeccionClick = async (leccionId: number) => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -347,11 +376,23 @@ const PaginaCurso = () => {
                     ))}
                   <li
                     className="rounded p-2 mt-1 cursor-pointer flex justify-between hover:text-yellow-600"
-                    onClick={() => handleExamenClick(seccion.id)} // Suponiendo que examenId es la variable donde guardas el id del examen
+                    onClick={() => handleExamenClick(seccion.id)}
                   >
                     <div className="flex items-center">
+                      {examenesCompletados.includes(seccion.id) ? (
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          className="text-green-500 mr-2"
+                        />
+                      ) : (
+                        <FontAwesomeIcon
+                          icon={faCircle}
+                          className="text-transparent border border-black mr-2"
+                        />
+                      )}
                       <span>Examen final</span>
                     </div>
+                    <FontAwesomeIcon icon={faFileAlt} className="mt-1" />
                   </li>
                 </ul>
               </div>
