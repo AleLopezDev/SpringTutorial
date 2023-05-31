@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { getTiempoExamen } from "modelo/modelo";
+import { getTiempoExamen, getTiempoEsperaExamen } from "modelo/modelo";
+import { Notyf } from "notyf";
+import "notyf/notyf.min.css";
 
 interface Examen {
   id: number;
@@ -21,6 +23,7 @@ interface Respuesta {
 }
 
 const ExamenComponente = () => {
+  const notyf = new Notyf();
   const [examen, setExamen] = useState<Examen[]>([]);
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const { id } = useParams<{ id: string }>();
@@ -45,33 +48,35 @@ const ExamenComponente = () => {
     localStorage.setItem("tiempoRestante", String(tiempoRestante));
   }, [tiempoRestante]);
 
-  useEffect(() => {
-    const horaSuspensionExamen = Number(
-      localStorage.getItem("horaSuspensionExamen")
-    );
-    if (Date.now() - horaSuspensionExamen < 20 * 60 * 1000) {
-      alert(
-        "Debes esperar 20 minutos antes de poder realizar el examen de nuevo."
-      );
-      navigate("/curso"); // Redirige al usuario a otra página
-    }
-  }, [navigate, localStorage.getItem("horaSuspensionExamen")]);
-
   const terminarExamen = useCallback(() => {
     setTiempoRestante(null);
     localStorage.removeItem("tiempoRestante");
+    setExamenEnviado(true);
     manejarEnvio();
   }, []);
+
+  useEffect(() => {
+    const horaSuspensionExamen = localStorage.getItem("horaSuspensionExamen");
+    const examenTomado = localStorage.getItem("examenTomado");
+
+    if (
+      examenTomado &&
+      Date.now() - Number(horaSuspensionExamen) < getTiempoEsperaExamen()
+    ) {
+      // El usuario ha intentado tomar el examen recientemente
+      notyf.error(
+        "No puedes volver a realizar el examen hasta que pasen " +
+          getTiempoEsperaExamen() / 1000 +
+          " segundos"
+      );
+      navigate("/curso");
+    }
+  }, [navigate, notyf]);
 
   useEffect(() => {
     // Si el tiempo restante llega a 0, termina el examen
     if (tiempoRestante === 0 || tiempoRestante === null || tiempoRestante < 0) {
       terminarExamen();
-      return;
-    }
-
-    // Si el examen ya ha terminado, no hace falta actualizar el tiempo restante
-    if (tiempoRestante === null) {
       return;
     }
 
@@ -237,6 +242,7 @@ const ExamenComponente = () => {
     }
 
     // Detener el temporizador
+    localStorage.setItem("examenTomado", "true");
     setTiempoRestante(null);
     localStorage.removeItem("tiempoRestante");
   };

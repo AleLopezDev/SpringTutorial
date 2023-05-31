@@ -2,15 +2,17 @@
 let minitestTiempo = 300000; 
 
 // Timer para el examen en segundos
-let examenTiempo = 600; 
+let examenTiempo = 5; 
+
+// Tiempo de espera antes de reintentar el examen en milisegundos
+let tiempoEsperaExamen = 15000;
 
 
 
 // Getters y setters
-
 export const getTiempoMinitest = () => minitestTiempo;
-
 
 export const getTiempoExamen = () => examenTiempo;
 
+export const getTiempoEsperaExamen = () => tiempoEsperaExamen;
 

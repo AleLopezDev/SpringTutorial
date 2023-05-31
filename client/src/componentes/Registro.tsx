@@ -13,7 +13,7 @@ const Registro = () => {
     setError("");
 
     // Validación básica en el cliente
-    if (!nombre) {
+    if (!nombre || !nombre.trim()) {
       setError("Por favor, introduce tu nombre.");
       return;
     }

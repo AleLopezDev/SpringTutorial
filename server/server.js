@@ -71,15 +71,17 @@ app.get("/api/lecciones", (req, res) => {
         res.status(500).send("Error al obtener los datos");
         return;
       }
-      res.json(results);
+      const totalLecciones = results.length;
+      res.json({ lecciones: results, totalLecciones: totalLecciones });
     }
   );
 });
+
 app.get("/api/lecciones_completadas/:userId", (req, res) => {
   const { userId } = req.params;
 
   connection.query(
-    "SELECT * FROM lecciones_completadas WHERE usuario_id = ?",
+    "SELECT lecciones_completadas.*, lecciones.nombre FROM lecciones_completadas INNER JOIN lecciones ON lecciones_completadas.leccion_id = lecciones.id WHERE lecciones_completadas.usuario_id = ?",
     [userId],
     (error, results) => {
       if (error) {
@@ -595,6 +597,21 @@ app.post("/api/examenes_completados", (req, res) => {
           res.status(201).send("Examen marcado como completado con éxito.");
         }
       );
+    }
+  );
+});
+
+// Panel de administracion
+app.get("/api/usuarios", (req, res) => {
+  connection.query(
+    "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url FROM usuarios",
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener los datos:", error);
+        res.status(500).send("Error al obtener los datos");
+        return;
+      }
+      res.json(results);
     }
   );
 });

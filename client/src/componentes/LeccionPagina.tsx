@@ -9,6 +9,7 @@ import rehypeRaw from "rehype-raw";
 import DOMPurify from "dompurify";
 import "../cssPersonalizado/leccionpagina.css";
 import { getTiempoMinitest } from "../modelo/modelo";
+import { Notyf } from "notyf";
 
 interface Leccion {
   id: number;
@@ -29,6 +30,7 @@ interface Pregunta {
 }
 
 const LeccionPage = () => {
+  const notyf = new Notyf({ duration: 4000 });
   const [leccion, setLeccion] = useState<Leccion | null>(null);
   const [leccionSiguiente, setLeccionSiguiente] = useState<Leccion | null>();
   const [leccionAnterior, setLeccionAnterior] = useState<Leccion | null>(null);
@@ -47,6 +49,9 @@ const LeccionPage = () => {
   );
   const navegar = useNavigate();
   const contenidoSanitizado = DOMPurify.sanitize(leccion?.contenido || ""); // ANTI XSS
+  const [seccionesCompletadas, setSeccionesCompletadas] = useState<number[]>(
+    []
+  );
 
   const { id } = useParams(); // Id de la lección de la URL
 
@@ -73,6 +78,32 @@ const LeccionPage = () => {
       navegar("/login");
     }
   }, [navegar, usuario]);
+
+  // Que no pueda pasar a la siguiente lección si no ha completado la sección
+  useEffect(() => {
+    const fetchSeccionesCompletadas = async () => {
+      const userId = usuario.id;
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5001/api/secciones_completadas/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          // Almacenar solo los IDs de las secciones completadas en el estado
+          const seccionesCompletadasIds = response.data.map(
+            (seccion: { seccion_id: number }) => seccion.seccion_id
+          );
+          setSeccionesCompletadas(seccionesCompletadasIds);
+        } catch (error) {
+          console.error("Error al obtener las secciones completadas:", error);
+        }
+      }
+    };
+
+    fetchSeccionesCompletadas();
+  }, [usuario.id]);
 
   const mezclarRespuestas = (pregunta: Pregunta) => {
     const respuestas = [
@@ -120,7 +151,11 @@ const LeccionPage = () => {
 
   const handleLeccionSiguiente = () => {
     if (leccionSiguiente) {
-      navegar(`/leccion/${leccionSiguiente.id}`);
+      if (!seccionesCompletadas.includes(leccionSiguiente.seccion_id)) {
+        notyf.error("Debes completar la sección anterior primero.");
+      } else {
+        navegar(`/leccion/${leccionSiguiente.id}`);
+      }
     }
   };
 
@@ -291,7 +326,7 @@ const LeccionPage = () => {
               onClick={handleVuelta}
             />
             <p className="text-white text-sm font-bold tracking-wider uppercase text-transform text-white/7 bg-[#13111C] m-0 pl-2 pt-1 ml-3 inline-block">
-              INTRODUCCIÓN
+              CURSO
             </p>
           </div>
 

@@ -26,6 +26,7 @@
     "notyf": "^3.10.0",
     "rc-progress": "^3.4.1",
     "react": "^18.2.0",
+    "react-avatar-uploader": "^1.0.3",
     "react-awesome-reveal": "^4.2.3",
     "react-circle-progress-bar": "^0.1.4",
     "react-collapse": "^5.1.1",
