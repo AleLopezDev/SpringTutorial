@@ -76,6 +76,7 @@ const LeccionPage = () => {
   useEffect(() => {
     if (!usuario || !usuario.id) {
       navegar("/login");
+      window.location.reload();
     }
   }, [navegar, usuario]);
 
@@ -97,13 +98,19 @@ const LeccionPage = () => {
           );
           setSeccionesCompletadas(seccionesCompletadasIds);
         } catch (error) {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error al obtener las secciones completadas:", error);
         }
       }
     };
 
     fetchSeccionesCompletadas();
-  }, [usuario.id]);
+  }, [usuario.id, navegar]);
 
   const mezclarRespuestas = (pregunta: Pregunta) => {
     const respuestas = [
@@ -130,6 +137,12 @@ const LeccionPage = () => {
       );
       // Actualiza el estado o haz algo más aquí
     } catch (error: any) {
+      if (error === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navegar("/login");
+        window.location.reload();
+      }
       if (error.response && error.response.status === 409) {
         console.log("Lección ya completada");
       } else {
@@ -177,16 +190,21 @@ const LeccionPage = () => {
         setLeccionAnterior(leccionesOrdenadas[indiceActual - 1]);
         setLeccionSiguiente(leccionesOrdenadas[indiceActual + 1]);
       } catch (error) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error(error);
       }
     };
     fetchLeccionesOrdenadas();
-  }, [id]);
+  }, [id, navegar]);
 
   useEffect(() => {
     const fetchLeccion = async () => {
       const token = localStorage.getItem("token");
-
       try {
         const response = await axios.get(
           `http://localhost:5001/api/lecciones/${id}`,
@@ -194,11 +212,12 @@ const LeccionPage = () => {
         );
         setLeccion(response.data);
       } catch (error) {
-        console.error(error);
-        // Si hay un error al cargar la lección, borra el usuario del localStorage y establece el estado de error
-        localStorage.removeItem("user");
-        // window.location.reload();
-        navegar("/login"); // Redirige al usuario a la página de inicio de sesión
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
       }
     };
     fetchLeccion();
@@ -238,13 +257,19 @@ const LeccionPage = () => {
           setShowMinitest(true);
         }
       } catch (error: any) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         if (error.response && error.response.status === 404) {
           console.error("No hay preguntas para esta lección");
         }
       }
     };
     fetchPreguntaAleatoria();
-  }, [id]);
+  }, [id, navegar]);
 
   // MANEJADOR TIEMPO DE ESPERA PARA EL MINITEST, y UseEffect para bloquear el minitest durante 5 minutos si el usuario responde incorrectamente
   const handleSeleccionarRespuesta = (preguntaId: any, respuesta: any) => {

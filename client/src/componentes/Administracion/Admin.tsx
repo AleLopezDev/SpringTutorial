@@ -15,6 +15,25 @@ interface Usuario {
   admin: boolean;
 }
 
+interface Examen {
+  id: number;
+  seccion_id: number;
+  nombre: string;
+}
+
+interface PreguntaExamenes {
+  id: number;
+  idExamen: number;
+  Pregunta: string;
+}
+
+interface RespuestaExamenes {
+  id: number;
+  idPregunta: number;
+  Respuesta: string;
+  Correcta: boolean;
+}
+
 interface LeccionesCompletadas {
   id: number;
   leccion_id: number;
@@ -83,17 +102,6 @@ const Admin = () => {
   const [descripcionSeccionEditada, setDescripcionSeccionEditada] =
     useState<string>("");
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5001/api/secciones")
-      .then((response) => {
-        setSecciones(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching sections", error);
-      });
-  }, []);
-
   const manejarClickBotonSecciones = () => {
     setEsVisibleAgregarSeccion(!esVisibleAgregarSeccion);
     setListaVisible(false);
@@ -108,6 +116,12 @@ const Admin = () => {
         setSecciones(secciones.filter((seccion) => seccion.id !== id));
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error deleting section", error);
       });
   };
@@ -128,10 +142,22 @@ const Admin = () => {
             setDescripcionNuevaSeccion("");
           })
           .catch((error) => {
+            if (error === 401) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              navegar("/login");
+              window.location.reload();
+            }
             console.error("Error fetching sections", error);
           });
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error adding section", error);
       });
   };
@@ -159,12 +185,20 @@ const Admin = () => {
         setDescripcionSeccionEditada("");
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error editing section", error);
       });
   };
 
   // ********** Lecciones **********
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
+
+  // Leccion - Agregar
   const [leccionSeleccionada, setLeccionSeleccionada] = useState<number>(0);
   const [contenidoLeccionSeleccionada, setContenidoLeccionSeleccionada] =
     useState<string>("");
@@ -172,13 +206,41 @@ const Admin = () => {
     useState<boolean>(false);
   const [nombreNuevaLeccion, setNombreNuevaLeccion] = useState<string>("");
   const [videoNuevaLeccion, setVideoNuevaLeccion] = useState<string>("");
-  const [descripcionNuevaLeccion, setDescripcionNuevaLeccion] =
-    useState<string>("");
+
+  // Leccion - Editar
   const [nombreLeccionEditada, setNombreLeccionEditada] = useState<string>("");
-  const [descripcionLeccionEditada, setDescripcionLeccionEditada] =
-    useState<string>("");
   const [seccionIdParaNuevaLeccion, setSeccionIdParaNuevaLeccion] =
     useState<number>(0);
+  const [nuevaUrlVideo, setNuevaUrlVideo] = useState<string>("");
+  const [contenidoLeccionEditada, setContenidoLeccionEditada] =
+    useState<string>("");
+  const [leccionBorrar, setLeccionBorrar] = useState<number>(0);
+
+  // Obtener contenido de la lección seleccionada
+  useEffect(() => {
+    if (leccionSeleccionada !== 0) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        axios
+          .get(`http://localhost:5001/api/lecciones/${leccionSeleccionada}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((response) => {
+            setContenidoLeccionEditada(response.data.contenido);
+          })
+          .catch((error) => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          });
+      } else {
+        console.error("No se encontraron token");
+      }
+    }
+  }, [leccionSeleccionada, navegar]);
 
   useEffect(() => {
     if (secciones.length > 0) {
@@ -194,9 +256,12 @@ const Admin = () => {
         setLecciones(response.data);
       })
       .catch((error) => {
-        console.error("Error fetching lessons", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navegar("/login");
+        window.location.reload();
       });
-  }, []);
+  }, [navegar]);
 
   const manejarClickBotonLecciones = () => {
     setEsVisibleAgregarLeccion(!esVisibleAgregarLeccion);
@@ -211,7 +276,12 @@ const Admin = () => {
         setLecciones(lecciones.filter((leccion) => leccion.id !== id));
       })
       .catch((error) => {
-        console.error("Error deleting lesson", error);
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
       });
   };
 
@@ -224,12 +294,38 @@ const Admin = () => {
         contenido: contenidoLeccionSeleccionada,
       })
       .then((response) => {
-        setLecciones([...lecciones, response.data]);
-        setNombreNuevaLeccion("");
-        setVideoNuevaLeccion("");
-        setContenidoLeccionSeleccionada("");
+        // Refetch lecciones
+        axios
+          .get("http://localhost:5001/api/lecciones")
+          .then((response) => {
+            setLecciones(response.data);
+            const nuevaLeccion = response.data.find(
+              (leccion: Leccion) => leccion.nombre === nombreNuevaLeccion
+            );
+            if (nuevaLeccion) {
+              setLeccionSeleccionada(nuevaLeccion.id);
+            }
+            setNombreNuevaLeccion("");
+            setVideoNuevaLeccion("");
+            setContenidoLeccionSeleccionada("");
+          })
+          .catch((error) => {
+            if (error === 401) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              navegar("/login");
+              window.location.reload();
+            }
+            console.error("Error fetching lessons", error);
+          });
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error adding lesson", error);
       });
   };
@@ -238,28 +334,145 @@ const Admin = () => {
     axios
       .put(`http://localhost:5001/api/lecciones/${leccionSeleccionada}`, {
         nombre: nombreLeccionEditada,
-        descripcion: descripcionLeccionEditada,
+        seccion_id: seccionIdParaNuevaLeccion,
+        video_url: nuevaUrlVideo,
+        contenido: contenidoLeccionEditada,
       })
       .then((response) => {
-        // Actualizar el estado de las lecciones para reflejar la edición
-        setLecciones(
-          lecciones.map((leccion) =>
-            leccion.id === leccionSeleccionada
-              ? {
-                  ...leccion,
-                  nombre: nombreLeccionEditada,
-                  descripcion: descripcionLeccionEditada,
-                }
-              : leccion
-          )
-        );
-        setNombreLeccionEditada("");
-        setDescripcionLeccionEditada("");
+        // Refetch lecciones
+        axios
+          .get("http://localhost:5001/api/lecciones")
+          .then((response) => {
+            setLecciones(response.data);
+            setNombreLeccionEditada("");
+            setNuevaUrlVideo("");
+            setContenidoLeccionEditada("");
+          })
+          .catch((error) => {
+            if (error === 401) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              navegar("/login");
+              window.location.reload();
+            }
+            console.error("Error fetching lessons", error);
+          });
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error editing lesson", error);
       });
   };
+
+  /* ------------ Examenes ------------ */
+  const [examenes, setExamenes] = useState<Examen[]>([]);
+  const [preguntasExamenes, setPreguntasExamenes] = useState<
+    PreguntaExamenes[]
+  >([]);
+  const [respuestasExamenes, setRespuestasExamenes] = useState<
+    RespuestaExamenes[]
+  >([]);
+  const [nombreNuevoExamen, setNombreNuevoExamen] = useState("");
+  const [
+    seccionSeleccionadaParaNuevoExamen,
+    setSeccionSeleccionadaParaNuevoExamen,
+  ] = useState(0);
+  const [examenSeleccionado, setExamenSeleccionado] = useState(0);
+  const [nombreExamenEditado, setNombreExamenEditado] = useState("");
+  const [esVisibleAgregarExamen, setEsVisibleAgregarExamen] = useState(false);
+
+  useEffect(() => {
+    if (secciones.length > 0) {
+      setSeccionSeleccionadaParaNuevoExamen(secciones[0].id);
+    }
+  }, [secciones]);
+
+  const manejarClickBotonExamenes = () => {
+    setEsVisibleAgregarExamen(true);
+    setListaVisible(false);
+    setEsVisibleAgregarSeccion(false);
+    setEsVisibleAgregarLeccion(false);
+  };
+
+  const manejarAgregarExamen = () => {
+    axios
+      .post("http://localhost:5001/api/examenes", {
+        nombre: nombreNuevoExamen,
+        seccion_id: seccionSeleccionadaParaNuevoExamen,
+      })
+      .then((response) => {
+        // Refetch the list of exams
+        axios
+          .get("http://localhost:5001/api/examenes")
+          .then((response) => {
+            setExamenes(response.data);
+          })
+          .catch((error) => {
+            console.error("Error obteniendo", error);
+          });
+        setNombreNuevoExamen("");
+      })
+      .catch((error) => {
+        console.error("Error añadiendo examen", error);
+      });
+  };
+
+  const manejarEditarExamen = () => {
+    axios
+      .put(`http://localhost:5001/api/examenes/${examenSeleccionado}`, {
+        nombre: nombreExamenEditado,
+      })
+      .then((response) => {
+        // Refetch the list of exams
+        axios
+          .get("http://localhost:5001/api/examenes")
+          .then((response) => {
+            setExamenes(response.data);
+          })
+          .catch((error) => {
+            console.error("Error obteniendo", error);
+          });
+        setNombreExamenEditado("");
+      })
+      .catch((error) => {
+        console.error("Error editando examen", error);
+      });
+  };
+
+  const manejarBorrarExamen = () => {
+    // Lógica para borrar un examen
+  };
+
+  const manejarAgregarPreguntaExamen = () => {
+    // Lógica para agregar una pregunta de examen
+  };
+
+  const manejarEditarPreguntaExamen = () => {
+    // Lógica para editar una pregunta de examen
+  };
+
+  const manejarBorrarPreguntaExamen = () => {
+    // Lógica para borrar una pregunta de examen
+  };
+
+  const manejarAgregarRespuestaExamen = () => {
+    // Lógica para agregar una respuesta de examen
+  };
+
+  const manejarEditarRespuestaExamen = () => {
+    // Lógica para editar una respuesta de examen
+  };
+
+  const manejarBorrarRespuestaExamen = () => {
+    // Lógica para borrar una respuesta de examen
+  };
+
+  /* ----------- Usuarios ------------- */
 
   // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
   useEffect(() => {
@@ -280,6 +493,7 @@ const Admin = () => {
   useEffect(() => {
     if (!usuario || !usuario.id) {
       navegar("/login");
+      window.location.reload();
     }
   }, [navegar, usuario]);
 
@@ -300,9 +514,15 @@ const Admin = () => {
         setUsuarios(response.data);
       })
       .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error fetching users", error);
       });
-  }, []);
+  }, [navegar]);
 
   const handleUserClick = (userId: number) => {
     if (usuarioSeleccionado === userId) {
@@ -318,6 +538,12 @@ const Admin = () => {
           setLeccionesCompletadas(response.data);
         })
         .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error fetching completed lessons", error);
         });
 
@@ -328,6 +554,12 @@ const Admin = () => {
           setSeccionesCompletadas(response.data);
         })
         .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error fetching completed sections", error);
         });
 
@@ -338,6 +570,12 @@ const Admin = () => {
           setExamenesCompletados(response.data);
         })
         .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error fetching completed exams", error);
         });
     }
@@ -347,7 +585,25 @@ const Admin = () => {
     setListaVisible(!listaVisible);
     setEsVisibleAgregarSeccion(false);
     setEsVisibleAgregarLeccion(false);
+    setEsVisibleAgregarExamen(false);
   };
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5001/api/secciones")
+      .then((response) => {
+        setSecciones(response.data);
+      })
+      .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
+        console.error("Error fetching sections", error);
+      });
+  }, [navegar]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100 h-screen">
@@ -374,7 +630,10 @@ const Admin = () => {
           Lecciones
         </button>
 
-        <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
+        <button
+          className="w-full bg-blue-500 text-white p-2 mb-2 rounded"
+          onClick={manejarClickBotonExamenes}
+        >
           Examenes
         </button>
 
@@ -538,7 +797,7 @@ const Admin = () => {
           {esVisibleAgregarLeccion && (
             <div>
               <div className="p-4 bg-white rounded shadow-md mb-5">
-                <h2 className="text-xl font-bold mb-2">
+                <h2 className="text-xl font-bold mb-4">
                   Agregar nueva lección
                 </h2>
                 <select
@@ -547,7 +806,6 @@ const Admin = () => {
                   onChange={(e) => {
                     const selectedSectionId = Number(e.target.value);
                     setSeccionSeleccionada(selectedSectionId);
-                    setSeccionIdParaNuevaLeccion(selectedSectionId);
                   }}
                 >
                   {secciones.map((seccion) => (
@@ -556,18 +814,15 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
+                <p className="mb-2">
+                  ↑ Selecciona la nueva seccion a la que pertenece la lección
+                </p>
 
                 <input
                   type="text"
                   placeholder="Nombre de la lección"
                   value={nombreNuevaLeccion}
                   onChange={(e) => setNombreNuevaLeccion(e.target.value)}
-                  className="w-full p-2 mb-2 border rounded"
-                />
-                <textarea
-                  placeholder="Descripción de la lección"
-                  value={descripcionNuevaLeccion}
-                  onChange={(e) => setDescripcionNuevaLeccion(e.target.value)}
                   className="w-full p-2 mb-2 border rounded"
                 />
                 <input
@@ -578,6 +833,7 @@ const Admin = () => {
                   className="w-full p-2 mb-2 border rounded"
                 />
                 <MDEditor
+                  className="mb-2"
                   value={contenidoLeccionSeleccionada}
                   onChange={(value) =>
                     setContenidoLeccionSeleccionada(value || "")
@@ -593,7 +849,7 @@ const Admin = () => {
               </div>
 
               <div className="p-4 bg-white rounded shadow-md mb-5">
-                <h2 className="text-xl font-bold mb-2">Editar lección</h2>
+                <h2 className="text-xl font-bold mb-4">Editar lección</h2>
                 <select
                   className="w-full p-2 mb-2 border rounded"
                   value={leccionSeleccionada}
@@ -614,11 +870,39 @@ const Admin = () => {
                   onChange={(e) => setNombreLeccionEditada(e.target.value)}
                   className="w-full p-2 mb-2 border rounded"
                 />
-                <textarea
-                  placeholder="Nueva descripción de la lección"
-                  value={descripcionLeccionEditada}
-                  onChange={(e) => setDescripcionLeccionEditada(e.target.value)}
+                <select
                   className="w-full p-2 mb-2 border rounded"
+                  value={seccionIdParaNuevaLeccion}
+                  onChange={(e) => {
+                    const selectedSectionId = Number(e.target.value);
+                    setSeccionIdParaNuevaLeccion(selectedSectionId);
+                  }}
+                >
+                  {secciones.map((seccion) => (
+                    <option key={seccion.id} value={seccion.id}>
+                      {seccion.nombre}
+                    </option>
+                  ))}
+                </select>
+                {secciones
+                  .filter((seccion) => seccion.id === seccionSeleccionada)
+                  .map((seccion) => (
+                    <p className="mb-2">
+                      ↑ Selecciona la nueva seccion a la que pertenece la
+                      lección ( Opcional )
+                    </p>
+                  ))}
+                <input
+                  type="text"
+                  placeholder="Nueva url del video ( Opcional )"
+                  value={nuevaUrlVideo}
+                  onChange={(e) => setNuevaUrlVideo(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <MDEditor
+                  className="mb-2"
+                  value={contenidoLeccionEditada}
+                  onChange={(value) => setContenidoLeccionEditada(value || "")}
                 />
                 <button
                   onClick={manejarEditarLeccion}
@@ -629,14 +913,12 @@ const Admin = () => {
               </div>
 
               <div className="p-4 bg-white rounded shadow-md mb-5">
-                <h2 className="text-xl font-bold mb-2">Eliminar lección</h2>
+                <h2 className="text-xl font-bold mb-4">Eliminar lección</h2>
 
                 <select
                   className="w-full p-2 mb-2 border rounded"
-                  value={leccionSeleccionada}
-                  onChange={(e) =>
-                    setLeccionSeleccionada(Number(e.target.value))
-                  }
+                  value={leccionBorrar}
+                  onChange={(e) => setLeccionBorrar(Number(e.target.value))}
                 >
                   {lecciones.map((leccion) => (
                     <option key={leccion.id} value={leccion.id}>
@@ -647,14 +929,85 @@ const Admin = () => {
 
                 <button
                   onClick={() => {
-                    if (leccionSeleccionada !== 0) {
-                      manejarBorradoLecciones(leccionSeleccionada);
+                    if (leccionBorrar !== 0) {
+                      manejarBorradoLecciones(leccionBorrar);
                     }
                   }}
                   className="w-full bg-red-500 text-white p-2 rounded"
                 >
                   Eliminar lección
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* CRUD  Examen*/}
+          {esVisibleAgregarExamen && (
+            <div>
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Agregar nuevo examen</h2>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={seccionSeleccionadaParaNuevoExamen}
+                  onChange={(e) => {
+                    const selectedSectionId = Number(e.target.value);
+                    setSeccionSeleccionadaParaNuevoExamen(selectedSectionId);
+                  }}
+                >
+                  {secciones.map((seccion) => (
+                    <option key={seccion.id} value={seccion.id}>
+                      {seccion.nombre}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Nombre del examen"
+                  value={nombreNuevoExamen}
+                  onChange={(e) => setNombreNuevoExamen(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarAgregarExamen}
+                  className="w-full bg-blue-500 text-white p-2 rounded"
+                >
+                  Agregar examen
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Editar examen</h2>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={examenSeleccionado}
+                  onChange={(e) =>
+                    setExamenSeleccionado(Number(e.target.value))
+                  }
+                >
+                  {examenes.map((examen) => (
+                    <option key={examen.id} value={examen.id}>
+                      {examen.nombre}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Nuevo nombre del examen"
+                  value={nombreExamenEditado}
+                  onChange={(e) => setNombreExamenEditado(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarEditarExamen}
+                  className="w-full bg-green-500 text-white p-2 rounded"
+                >
+                  Editar examen
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Eliminar examen</h2>
+                {/* Aquí iría el formulario para eliminar un examen existente */}
               </div>
             </div>
           )}

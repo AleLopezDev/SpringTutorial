@@ -52,6 +52,17 @@ app.put("/api/usuarios/:id", (req, res) => {
   );
 });
 
+app.get("/api/examenes", (req, res) => {
+  connection.query("SELECT * FROM Examenes", (error, results) => {
+    if (error) {
+      console.error("Error al obtener los exámenes:", error);
+      res.status(500).send("Error al obtener los exámenes");
+      return;
+    }
+    res.json(results);
+  });
+});
+
 app.get("/api/examenes/:seccion_id", (req, res) => {
   connection.query(
     "SELECT * FROM examenes WHERE seccion_id = ?",
@@ -621,7 +632,7 @@ app.post("/api/examenes_completados", (req, res) => {
   );
 });
 
-// Panel de administracion
+/*** Panel de administracion ***/
 app.get("/api/usuarios", (req, res) => {
   connection.query(
     "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url, admin FROM usuarios",
@@ -691,41 +702,78 @@ app.post("/api/lecciones", (req, res) => {
   );
 });
 
-app.get("/api/leccionesOrdenadas", (req, res) => {
-  // Obtén el token de autenticación del encabezado de la solicitud
-  const authHeader = req.headers.authorization;
+// Editar leccion
+app.put("/api/lecciones/:id", (req, res) => {
+  const { id } = req.params;
+  const { nombre, seccion_id, video_url, contenido } = req.body;
 
-  if (!authHeader) {
-    res.status(401).send("No se proporcionó un token de safas");
-    return;
-  }
-
-  // El encabezado de autorización generalmente tiene el formato "Bearer [token]"
-  const token = authHeader.split(" ")[1];
-
-  try {
-    // Decodifica el token para obtener el ID del usuario
-    const decodedToken = jwt.verify(token, "your_jwt_secret");
-
-    connection.query(
-      "SELECT id, seccion_id, nombre, video_url FROM lecciones ORDER BY seccion_id ASC, id ASC",
-      (error, results) => {
-        if (error) {
-          console.error("Error al obtener los datos:", error);
-          res.status(500).send("Error al obtener los datos");
-          return;
-        }
-        res.json(results);
+  connection.query(
+    "UPDATE lecciones SET nombre = ?, seccion_id = ?, video_url = ?, contenido = ? WHERE id = ?",
+    [nombre, seccion_id, video_url, contenido, id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al editar la lección:", error);
+        res.status(500).send("Error al editar la lección");
+        return;
       }
-    );
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      res.status(401).send("Token de autenticación expirado");
-    } else {
-      console.error("Error al decodificar el token de autenticación:", error);
-      res.status(401).send("Token de autenticación inválido");
+      res.status(200).send("Lección editada con éxito.");
     }
-  }
+  );
+});
+
+// Eliminar leccion
+app.delete("/api/lecciones/:id", (req, res) => {
+  const { id } = req.params;
+
+  connection.query(
+    "DELETE FROM lecciones_completadas WHERE leccion_id = ?",
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al eliminar las lecciones completadas:", error);
+        res.status(500).send("Error al eliminar las lecciones completadas");
+        return;
+      }
+
+      connection.query(
+        "DELETE FROM lecciones WHERE id = ?",
+        [id],
+        (error, results) => {
+          if (error) {
+            console.error("Error al eliminar la lección:", error);
+            res.status(500).send("Error al eliminar la lección");
+            return;
+          }
+          if (results.affectedRows === 0) {
+            res
+              .status(404)
+              .send("No se encontró la lección con el id especificado");
+            return;
+          }
+          res.status(200).send("Lección eliminada con éxito.");
+        }
+      );
+    }
+  );
+});
+
+/* EXAMEN */
+// Agregar examen
+app.post("/api/examenes", (req, res) => {
+  const { nombre, seccion_id } = req.body;
+
+  connection.query(
+    "INSERT INTO Examenes (nombre, seccion_id) VALUES (?, ?)",
+    [nombre, seccion_id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al agregar el examen:", error);
+        res.status(500).send("Error al agregar el examen");
+        return;
+      }
+      res.status(201).send("Examen agregado con éxito.");
+    }
+  );
 });
 
 const PORT = process.env.PORT || 5001;

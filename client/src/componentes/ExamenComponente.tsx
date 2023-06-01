@@ -229,6 +229,12 @@ const ExamenComponente = () => {
           console.log("Examen marcado como completado con éxito.");
         })
         .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            navigate("/login");
+            window.location.reload();
+          }
           console.error("Error al marcar el examen como completado:", error);
         });
 

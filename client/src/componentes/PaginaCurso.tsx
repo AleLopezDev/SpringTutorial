@@ -31,7 +31,7 @@ interface Leccion {
 const PaginaCurso = () => {
   const [seccionExpandida, setSeccionExpandida] = useState<number | null>(null); // Obtiene el id de la seccion expandida
   const [ultimaLeccion, setUltimaLeccion] = useState<Leccion | null>(null);
-  const navigate = useNavigate();
+  const navegar = useNavigate();
   const [progreso, setProgreso] = useState(0);
   const [secciones, setSecciones] = useState<Seccion[]>([]);
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
@@ -49,7 +49,7 @@ const PaginaCurso = () => {
   );
 
   const handleExamenClick = (examenId: any) => {
-    navigate(`/examen/${examenId}`);
+    navegar(`/examen/${examenId}`);
   };
 
   // Notificaciones
@@ -91,13 +91,20 @@ const PaginaCurso = () => {
           );
           setExamenesCompletados(examenesCompletadosIds);
         } catch (error) {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+            window.location.reload();
+          }
           console.error("Error al obtener los exámenes completados:", error);
         }
       }
     };
 
     fetchExamenesCompletados();
-  }, [usuario.id]);
+  }, [usuario.id, navegar]);
 
   // Obtener las secciones completadas cuando se carga el componente
   useEffect(() => {
@@ -117,13 +124,19 @@ const PaginaCurso = () => {
           );
           setSeccionesCompletadas(seccionesCompletadasIds);
         } catch (error) {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error al obtener las secciones completadas:", error);
         }
       }
     };
 
     fetchSeccionesCompletadas();
-  }, [usuario.id]);
+  }, [usuario.id, navegar]);
 
   // Guardar las lecciones completadas en el estado para poner el check
   useEffect(() => {
@@ -143,13 +156,19 @@ const PaginaCurso = () => {
           );
           setLeccionesCompletadas(leccionesCompletadasIds);
         } catch (error) {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
           console.error("Error al obtener las lecciones completadas:", error);
         }
       }
     };
 
     fetchLeccionesCompletadas();
-  }, [usuario.id]);
+  }, [usuario.id, navegar]);
 
   // Comprobar si la sección anterior está completa cuando se hace clic en una sección
   const handleSeccionClick = (seccionId: number) => {
@@ -182,8 +201,14 @@ const PaginaCurso = () => {
           { headers: { Authorization: `Bearer ${token}` } } // Aquí es donde se incluye el token
         );
         const { leccionId } = response.data;
-        navigate(`/leccion/${leccionId}`);
+        navegar(`/leccion/${leccionId}`);
       } catch (error) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error al obtener la última lección vista:", error);
       }
     } else {
@@ -198,8 +223,14 @@ const PaginaCurso = () => {
     if (token) {
       try {
         // Aquí puedes manejar la respuesta de la API
-        navigate(`/leccion/${leccionId}`);
+        navegar(`/leccion/${leccionId}`);
       } catch (error) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error al obtener la lección:", error);
       }
     } else {
@@ -211,9 +242,10 @@ const PaginaCurso = () => {
   // Comprobar si esta autenticado
   useEffect(() => {
     if (!usuario || !usuario.id) {
-      navigate("/login");
+      navegar("/login");
+      window.location.reload();
     }
-  }, [navigate, usuario]);
+  }, [navegar, usuario]);
 
   // Obtener progreso
   useEffect(() => {
@@ -230,11 +262,17 @@ const PaginaCurso = () => {
         );
         setProgreso(response.data.porcentajeCompletado);
       } catch (error) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error(error);
       }
     };
     fetchProgreso();
-  }, []);
+  }, [navegar]);
 
   // Rellenar secciones con sus lecciones
   // Rellenar secciones con sus lecciones y examen
@@ -251,12 +289,18 @@ const PaginaCurso = () => {
         );
         setLecciones(leccionesResponse.data);
       } catch (error) {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
         console.error("Error al obtener datos:", error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [navegar]);
 
   // Obtener la última lección vista
   useEffect(() => {
@@ -281,7 +325,8 @@ const PaginaCurso = () => {
             // Si expira el token, elimina el usuario y el token del almacenamiento local y redirige al usuario a la página de inicio de sesión
             localStorage.removeItem("user");
             localStorage.removeItem("token");
-            navigate("/login");
+            navegar("/login");
+            window.location.reload();
             window.location.reload();
           } else {
             console.error("Error al obtener la última lección vista:", error);
@@ -290,7 +335,7 @@ const PaginaCurso = () => {
       }
     };
     fetchUltimaLeccion();
-  }, [navigate]);
+  }, [navegar]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-green ">
