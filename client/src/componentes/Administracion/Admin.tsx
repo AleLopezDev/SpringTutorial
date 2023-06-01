@@ -119,10 +119,17 @@ const Admin = () => {
         descripcion: descripcionNuevaSeccion,
       })
       .then((response) => {
-        // Actualizar el estado de las secciones para reflejar la adición
-        setSecciones([...secciones, response.data]);
-        setNombreNuevaSeccion("");
-        setDescripcionNuevaSeccion("");
+        // Refetch secciones
+        axios
+          .get("http://localhost:5001/api/secciones")
+          .then((response) => {
+            setSecciones(response.data);
+            setNombreNuevaSeccion("");
+            setDescripcionNuevaSeccion("");
+          })
+          .catch((error) => {
+            console.error("Error fetching sections", error);
+          });
       })
       .catch((error) => {
         console.error("Error adding section", error);
@@ -367,8 +374,12 @@ const Admin = () => {
           Lecciones
         </button>
 
-        <button className="w-full bg-blue-500 text-white p-2 rounded">
+        <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
           Examenes
+        </button>
+
+        <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
+          Mini-Tests
         </button>
       </div>
       <main className="flex-1 p-4 h-screen overflow-auto">

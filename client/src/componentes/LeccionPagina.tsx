@@ -151,57 +151,36 @@ const LeccionPage = () => {
 
   const handleLeccionSiguiente = () => {
     if (leccionSiguiente) {
-      if (!seccionesCompletadas.includes(leccionSiguiente.seccion_id)) {
-        notyf.error("Debes completar la sección anterior primero.");
+      if (leccion && !seccionesCompletadas.includes(leccion.seccion_id)) {
+        notyf.error("Debes completar la sección actual primero.");
       } else {
         navegar(`/leccion/${leccionSiguiente.id}`);
       }
     }
   };
 
+  // Obtener lecciones anteriores y siguientes
   useEffect(() => {
-    const fetchLeccionSiguiente = async () => {
+    const fetchLeccionesOrdenadas = async () => {
       const token = localStorage.getItem("token");
-
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/lecciones/${Number(id) + 1}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setLeccionSiguiente(response.data);
-      } catch (error: any) {
-        if (error.response.status === 404) {
-          setLeccionSiguiente(null);
-        }
-        console.error(error);
-      }
-    };
-    fetchLeccionSiguiente();
-  }, [id]);
-
-  useEffect(() => {
-    const fetchLeccionAnterior = async () => {
-      const token = localStorage.getItem("token");
-      const anteriorId = Number(id) - 1;
-
-      if (anteriorId <= 0) {
-        setLeccionAnterior({ nombre: "Curso" } as Leccion);
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `http://localhost:5001/api/lecciones/${anteriorId}`,
+          `http://localhost:5001/api/leccionesOrdenadas`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        setLeccionAnterior(response.data);
-        // Recarga pagina
+        const leccionesOrdenadas = response.data;
+        const indiceActual = leccionesOrdenadas.findIndex(
+          (leccion: any) => leccion.id === Number(id)
+        );
+
+        setLeccionAnterior(leccionesOrdenadas[indiceActual - 1]);
+        setLeccionSiguiente(leccionesOrdenadas[indiceActual + 1]);
       } catch (error) {
         console.error(error);
       }
     };
-    fetchLeccionAnterior();
+    fetchLeccionesOrdenadas();
   }, [id]);
 
   useEffect(() => {
