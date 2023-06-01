@@ -33,6 +33,25 @@ connection.connect((error) => {
   console.log("Conexión exitosa a la base de datos");
 });
 
+// Actualzar nombre usuario
+app.put("/api/usuarios/:id", (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
+
+  connection.query(
+    "UPDATE usuarios SET nombre = ? WHERE id = ?",
+    [nombre, id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al actualizar el nombre del usuario:", error);
+        res.status(500).send("Error al actualizar el nombre del usuario");
+        return;
+      }
+      res.status(200).send("Nombre del usuario actualizado con éxito.");
+    }
+  );
+});
+
 app.get("/api/examenes/:seccion_id", (req, res) => {
   connection.query(
     "SELECT * FROM examenes WHERE seccion_id = ?",
@@ -71,8 +90,7 @@ app.get("/api/lecciones", (req, res) => {
         res.status(500).send("Error al obtener los datos");
         return;
       }
-      const totalLecciones = results.length;
-      res.json({ lecciones: results, totalLecciones: totalLecciones });
+      res.json(results);
     }
   );
 });
@@ -371,6 +389,7 @@ app.post("/api/registro", async (req, res) => {
           nombre: nombre,
           correo_electronico: correo_electronico,
           imagen_url: imagen_url,
+          admin: false,
         },
       });
     }
@@ -414,6 +433,7 @@ app.post("/api/login", async (req, res) => {
               nombre: user.nombre,
               correo_electronico: user.correo_electronico,
               imagen_url: user.imagen_url,
+              admin: false,
             },
           });
         } else {
@@ -604,7 +624,7 @@ app.post("/api/examenes_completados", (req, res) => {
 // Panel de administracion
 app.get("/api/usuarios", (req, res) => {
   connection.query(
-    "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url FROM usuarios",
+    "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url, admin FROM usuarios",
     (error, results) => {
       if (error) {
         console.error("Error al obtener los datos:", error);
@@ -612,6 +632,43 @@ app.get("/api/usuarios", (req, res) => {
         return;
       }
       res.json(results);
+    }
+  );
+});
+
+// Agregar una nueva sección
+app.post("/api/secciones", (req, res) => {
+  const { nombre, descripcion } = req.body;
+
+  connection.query(
+    "INSERT INTO secciones (nombre, descripcion) VALUES (?, ?)",
+    [nombre, descripcion],
+    (error, results) => {
+      if (error) {
+        console.error("Error al agregar la sección:", error);
+        res.status(500).send("Error al agregar la sección");
+        return;
+      }
+      res.status(201).send("Sección agregada con éxito.");
+    }
+  );
+});
+
+// Editar una sección existente
+app.put("/api/secciones/:id", (req, res) => {
+  const { id } = req.params;
+  const { nombre, descripcion } = req.body;
+
+  connection.query(
+    "UPDATE secciones SET nombre = ?, descripcion = ? WHERE id = ?",
+    [nombre, descripcion, id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al editar la sección:", error);
+        res.status(500).send("Error al editar la sección");
+        return;
+      }
+      res.status(200).send("Sección editada con éxito.");
     }
   );
 });

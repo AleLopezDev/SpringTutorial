@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 interface Usuario {
   id: number;
@@ -10,6 +11,7 @@ interface Usuario {
   contrasena: string;
   ultima_leccion_vista: number;
   imagen_url: string;
+  admin: boolean;
 }
 
 interface LeccionesCompletadas {
@@ -18,6 +20,18 @@ interface LeccionesCompletadas {
   usuario_id: number;
   fecha_completada: string;
   nombre: string;
+}
+interface Seccion {
+  id: number;
+  nombre: string;
+  descripcion: string;
+}
+
+interface Leccion {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  seccion_id: number;
 }
 
 interface SeccionesCompletadas {
@@ -49,6 +63,215 @@ const Admin = () => {
   const [examenesCompletados, setExamenesCompletados] = useState<
     ExamenesCompletados[]
   >([]);
+  const [usuario, setUsuario] = useState(
+    JSON.parse(localStorage.getItem("user") || "{}")
+  );
+
+  const navegar = useNavigate();
+
+  /********** Secciones **********/
+  const [secciones, setSecciones] = useState<Seccion[]>([]);
+  const [seccionSeleccionada, setSeccionSeleccionada] = useState<number>(0);
+
+  const [esVisibleAgregarSeccion, setEsVisibleAgregarSeccion] =
+    useState<boolean>(false);
+  const [nombreNuevaSeccion, setNombreNuevaSeccion] = useState<string>("");
+  const [descripcionNuevaSeccion, setDescripcionNuevaSeccion] =
+    useState<string>("");
+  const [nombreSeccionEditada, setNombreSeccionEditada] = useState<string>("");
+  const [descripcionSeccionEditada, setDescripcionSeccionEditada] =
+    useState<string>("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5001/api/secciones")
+      .then((response) => {
+        setSecciones(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching sections", error);
+      });
+  }, []);
+
+  const manejarClickBotonSecciones = () => {
+    setEsVisibleAgregarSeccion(!esVisibleAgregarSeccion);
+    setListaVisible(false);
+    setEsVisibleAgregarLeccion(false);
+  };
+
+  const manejarBorradoSecciones = (id: number) => {
+    axios
+      .delete(`http://localhost:5001/api/secciones/${id}`)
+      .then((response) => {
+        // Actualizar el estado de las secciones para reflejar la eliminación
+        setSecciones(secciones.filter((seccion) => seccion.id !== id));
+      })
+      .catch((error) => {
+        console.error("Error deleting section", error);
+      });
+  };
+
+  const manejarAgregarSeccion = () => {
+    axios
+      .post("http://localhost:5001/api/secciones", {
+        nombre: nombreNuevaSeccion,
+        descripcion: descripcionNuevaSeccion,
+      })
+      .then((response) => {
+        // Actualizar el estado de las secciones para reflejar la adición
+        setSecciones([...secciones, response.data]);
+        setNombreNuevaSeccion("");
+        setDescripcionNuevaSeccion("");
+      })
+      .catch((error) => {
+        console.error("Error adding section", error);
+      });
+  };
+
+  const manejarEditarSeccion = () => {
+    axios
+      .put(`http://localhost:5001/api/secciones/${seccionSeleccionada}`, {
+        nombre: nombreSeccionEditada,
+        descripcion: descripcionSeccionEditada,
+      })
+      .then((response) => {
+        // Actualizar el estado de las secciones para reflejar la edición
+        setSecciones(
+          secciones.map((seccion) =>
+            seccion.id === seccionSeleccionada
+              ? {
+                  ...seccion,
+                  nombre: nombreSeccionEditada,
+                  descripcion: descripcionSeccionEditada,
+                }
+              : seccion
+          )
+        );
+        setNombreSeccionEditada("");
+        setDescripcionSeccionEditada("");
+      })
+      .catch((error) => {
+        console.error("Error editing section", error);
+      });
+  };
+
+  // ********** Lecciones **********
+  const [lecciones, setLecciones] = useState<Leccion[]>([]);
+  const [leccionSeleccionada, setLeccionSeleccionada] = useState<number>(0);
+
+  const [esVisibleAgregarLeccion, setEsVisibleAgregarLeccion] =
+    useState<boolean>(false);
+  const [nombreNuevaLeccion, setNombreNuevaLeccion] = useState<string>("");
+  const [descripcionNuevaLeccion, setDescripcionNuevaLeccion] =
+    useState<string>("");
+  const [nombreLeccionEditada, setNombreLeccionEditada] = useState<string>("");
+  const [descripcionLeccionEditada, setDescripcionLeccionEditada] =
+    useState<string>("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5001/api/lecciones")
+      .then((response) => {
+        setLecciones(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching lessons", error);
+      });
+  }, []);
+
+  const manejarClickBotonLecciones = () => {
+    setEsVisibleAgregarLeccion(!esVisibleAgregarLeccion);
+    setListaVisible(false);
+    setEsVisibleAgregarSeccion(false);
+  };
+
+  const manejarBorradoLecciones = (id: number) => {
+    axios
+      .delete(`http://localhost:5001/api/lecciones/${id}`)
+      .then((response) => {
+        // Actualizar el estado de las lecciones para reflejar la eliminación
+        setLecciones(lecciones.filter((leccion) => leccion.id !== id));
+      })
+      .catch((error) => {
+        console.error("Error deleting lesson", error);
+      });
+  };
+
+  const manejarAgregarLeccion = () => {
+    axios
+      .post("http://localhost:5001/api/lecciones", {
+        nombre: nombreNuevaLeccion,
+        descripcion: descripcionNuevaLeccion,
+      })
+      .then((response) => {
+        // Actualizar el estado de las lecciones para reflejar la adición
+        setLecciones([...lecciones, response.data]);
+        setNombreNuevaLeccion("");
+        setDescripcionNuevaLeccion("");
+      })
+      .catch((error) => {
+        console.error("Error adding lesson", error);
+      });
+  };
+
+  const manejarEditarLeccion = () => {
+    axios
+      .put(`http://localhost:5001/api/lecciones/${leccionSeleccionada}`, {
+        nombre: nombreLeccionEditada,
+        descripcion: descripcionLeccionEditada,
+      })
+      .then((response) => {
+        // Actualizar el estado de las lecciones para reflejar la edición
+        setLecciones(
+          lecciones.map((leccion) =>
+            leccion.id === leccionSeleccionada
+              ? {
+                  ...leccion,
+                  nombre: nombreLeccionEditada,
+                  descripcion: descripcionLeccionEditada,
+                }
+              : leccion
+          )
+        );
+        setNombreLeccionEditada("");
+        setDescripcionLeccionEditada("");
+      })
+      .catch((error) => {
+        console.error("Error editing lesson", error);
+      });
+  };
+
+  // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
+    };
+
+    // Escucha los cambios en el almacenamiento local
+    window.addEventListener("storage", handleStorageChange);
+
+    // Limpia el oyente cuando se desmonta el componente
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  // Comprobar si esta autenticado
+  useEffect(() => {
+    if (!usuario || !usuario.id) {
+      navegar("/login");
+    }
+  }, [navegar, usuario]);
+
+  // Comprobar si es admin
+  useEffect(() => {
+    console.log(usuario.admin);
+    if (usuario && usuario.admin) {
+      console.log("El usuario es administrador");
+    } else {
+      console.log("El usuario no es administrador");
+    }
+  }, [usuario]);
 
   useEffect(() => {
     axios
@@ -100,8 +323,10 @@ const Admin = () => {
     }
   };
 
-  const handleUsersButtonClick = () => {
+  const manejarUsuarioVisible = () => {
     setListaVisible(!listaVisible);
+    setEsVisibleAgregarSeccion(false);
+    setEsVisibleAgregarLeccion(false);
   };
 
   return (
@@ -112,13 +337,23 @@ const Admin = () => {
         </h2>
         <button
           className="w-full bg-blue-500 text-white p-2 rounded mb-2"
-          onClick={handleUsersButtonClick}
+          onClick={manejarUsuarioVisible}
         >
           Usuarios
         </button>
-        <button className="w-full bg-blue-500 text-white p-2 rounded mb-2">
-          Lecciones/Secciones
+        <button
+          className="w-full bg-blue-500 text-white p-2 rounded mb-2"
+          onClick={manejarClickBotonSecciones}
+        >
+          Secciones
         </button>
+        <button
+          className="w-full bg-blue-500 text-white p-2 rounded mb-2"
+          onClick={manejarClickBotonLecciones}
+        >
+          Lecciones
+        </button>
+
         <button className="w-full bg-blue-500 text-white p-2 rounded">
           Examenes
         </button>
@@ -178,6 +413,195 @@ const Admin = () => {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+          {/* CRUD  seccion*/}
+          {esVisibleAgregarSeccion && (
+            <div>
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">
+                  Agregar nueva sección
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Nombre de la sección"
+                  value={nombreNuevaSeccion}
+                  onChange={(e) => setNombreNuevaSeccion(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <textarea
+                  placeholder="Descripción de la sección"
+                  value={descripcionNuevaSeccion}
+                  onChange={(e) => setDescripcionNuevaSeccion(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarAgregarSeccion}
+                  className="w-full bg-blue-500 text-white p-2 rounded"
+                >
+                  Agregar sección
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Editar sección</h2>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={seccionSeleccionada}
+                  onChange={(e) =>
+                    setSeccionSeleccionada(Number(e.target.value))
+                  }
+                >
+                  {secciones.map((seccion) => (
+                    <option key={seccion.id} value={seccion.id}>
+                      {seccion.nombre}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Nuevo nombre de la sección"
+                  value={nombreSeccionEditada}
+                  onChange={(e) => setNombreSeccionEditada(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <textarea
+                  placeholder="Nueva descripción de la sección"
+                  value={descripcionSeccionEditada}
+                  onChange={(e) => setDescripcionSeccionEditada(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarEditarSeccion}
+                  className="w-full bg-green-500 text-white p-2 rounded"
+                >
+                  Editar sección
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Eliminar sección</h2>
+
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={seccionSeleccionada}
+                  onChange={(e) =>
+                    setSeccionSeleccionada(Number(e.target.value))
+                  }
+                >
+                  {secciones.map((seccion) => (
+                    <option key={seccion.id} value={seccion.id}>
+                      {seccion.nombre}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => {
+                    if (seccionSeleccionada !== 0) {
+                      manejarBorradoSecciones(seccionSeleccionada);
+                    }
+                  }}
+                  className="w-full bg-red-500 text-white p-2 rounded"
+                >
+                  Eliminar sección
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* CRUD  leccion*/}
+          {esVisibleAgregarLeccion && (
+            <div>
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">
+                  Agregar nueva lección
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Nombre de la lección"
+                  value={nombreNuevaLeccion}
+                  onChange={(e) => setNombreNuevaLeccion(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <textarea
+                  placeholder="Descripción de la lección"
+                  value={descripcionNuevaLeccion}
+                  onChange={(e) => setDescripcionNuevaLeccion(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarAgregarLeccion}
+                  className="w-full bg-blue-500 text-white p-2 rounded"
+                >
+                  Agregar lección
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Editar lección</h2>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={leccionSeleccionada}
+                  onChange={(e) =>
+                    setLeccionSeleccionada(Number(e.target.value))
+                  }
+                >
+                  {lecciones.map((leccion) => (
+                    <option key={leccion.id} value={leccion.id}>
+                      {leccion.nombre}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Nuevo nombre de la lección"
+                  value={nombreLeccionEditada}
+                  onChange={(e) => setNombreLeccionEditada(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <textarea
+                  placeholder="Nueva descripción de la lección"
+                  value={descripcionLeccionEditada}
+                  onChange={(e) => setDescripcionLeccionEditada(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <button
+                  onClick={manejarEditarLeccion}
+                  className="w-full bg-green-500 text-white p-2 rounded"
+                >
+                  Editar lección
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">Eliminar lección</h2>
+
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={leccionSeleccionada}
+                  onChange={(e) =>
+                    setLeccionSeleccionada(Number(e.target.value))
+                  }
+                >
+                  {lecciones.map((leccion) => (
+                    <option key={leccion.id} value={leccion.id}>
+                      {leccion.nombre}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => {
+                    if (leccionSeleccionada !== 0) {
+                      manejarBorradoLecciones(leccionSeleccionada);
+                    }
+                  }}
+                  className="w-full bg-red-500 text-white p-2 rounded"
+                >
+                  Eliminar lección
+                </button>
+              </div>
             </div>
           )}
         </div>

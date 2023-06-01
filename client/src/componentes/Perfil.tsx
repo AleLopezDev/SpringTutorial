@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const Perfil = ({ user }: { user: any }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,11 +13,20 @@ const Perfil = ({ user }: { user: any }) => {
 
   const saveChanges = () => {
     if (user) {
-      user.name = editedName;
-      localStorage.setItem("user", JSON.stringify(user));
+      axios
+        .put(`http://localhost:5001/api/usuarios/${user.id}`, {
+          nombre: editedName,
+        })
+        .then((response) => {
+          user.name = editedName;
+          localStorage.setItem("user", JSON.stringify(user));
+          setIsEditing(false);
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el nombre del usuario:", error);
+        });
     }
-    setIsEditing(false);
-    window.location.reload();
   };
 
   const cancelChanges = () => {
