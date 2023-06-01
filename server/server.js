@@ -673,6 +673,24 @@ app.put("/api/secciones/:id", (req, res) => {
   );
 });
 
+// Agregar leccion
+app.post("/api/lecciones", (req, res) => {
+  const { nombre, seccion_id, video_url, contenido } = req.body;
+
+  connection.query(
+    "INSERT INTO lecciones (nombre, seccion_id, video_url, contenido) VALUES (?, ?, ?, ?)",
+    [nombre, seccion_id, video_url, contenido],
+    (error, results) => {
+      if (error) {
+        console.error("Error al agregar la lección:", error);
+        res.status(500).send("Error al agregar la lección");
+        return;
+      }
+      res.status(201).send("Lección agregada con éxito.");
+    }
+  );
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Api ejecutándose en el puerto ${PORT}`);

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import MDEditor from "@uiw/react-md-editor";
 
 interface Usuario {
   id: number;
@@ -158,15 +159,26 @@ const Admin = () => {
   // ********** Lecciones **********
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
   const [leccionSeleccionada, setLeccionSeleccionada] = useState<number>(0);
-
+  const [contenidoLeccionSeleccionada, setContenidoLeccionSeleccionada] =
+    useState<string>("");
   const [esVisibleAgregarLeccion, setEsVisibleAgregarLeccion] =
     useState<boolean>(false);
   const [nombreNuevaLeccion, setNombreNuevaLeccion] = useState<string>("");
+  const [videoNuevaLeccion, setVideoNuevaLeccion] = useState<string>("");
   const [descripcionNuevaLeccion, setDescripcionNuevaLeccion] =
     useState<string>("");
   const [nombreLeccionEditada, setNombreLeccionEditada] = useState<string>("");
   const [descripcionLeccionEditada, setDescripcionLeccionEditada] =
     useState<string>("");
+  const [seccionIdParaNuevaLeccion, setSeccionIdParaNuevaLeccion] =
+    useState<number>(0);
+
+  useEffect(() => {
+    if (secciones.length > 0) {
+      setSeccionSeleccionada(secciones[0].id);
+      setSeccionIdParaNuevaLeccion(secciones[0].id);
+    }
+  }, [secciones]);
 
   useEffect(() => {
     axios
@@ -189,7 +201,6 @@ const Admin = () => {
     axios
       .delete(`http://localhost:5001/api/lecciones/${id}`)
       .then((response) => {
-        // Actualizar el estado de las lecciones para reflejar la eliminación
         setLecciones(lecciones.filter((leccion) => leccion.id !== id));
       })
       .catch((error) => {
@@ -201,13 +212,15 @@ const Admin = () => {
     axios
       .post("http://localhost:5001/api/lecciones", {
         nombre: nombreNuevaLeccion,
-        descripcion: descripcionNuevaLeccion,
+        seccion_id: seccionIdParaNuevaLeccion,
+        video_url: videoNuevaLeccion,
+        contenido: contenidoLeccionSeleccionada,
       })
       .then((response) => {
-        // Actualizar el estado de las lecciones para reflejar la adición
         setLecciones([...lecciones, response.data]);
         setNombreNuevaLeccion("");
-        setDescripcionNuevaLeccion("");
+        setVideoNuevaLeccion("");
+        setContenidoLeccionSeleccionada("");
       })
       .catch((error) => {
         console.error("Error adding lesson", error);
@@ -517,6 +530,22 @@ const Admin = () => {
                 <h2 className="text-xl font-bold mb-2">
                   Agregar nueva lección
                 </h2>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={seccionSeleccionada}
+                  onChange={(e) => {
+                    const selectedSectionId = Number(e.target.value);
+                    setSeccionSeleccionada(selectedSectionId);
+                    setSeccionIdParaNuevaLeccion(selectedSectionId);
+                  }}
+                >
+                  {secciones.map((seccion) => (
+                    <option key={seccion.id} value={seccion.id}>
+                      {seccion.nombre}
+                    </option>
+                  ))}
+                </select>
+
                 <input
                   type="text"
                   placeholder="Nombre de la lección"
@@ -530,6 +559,20 @@ const Admin = () => {
                   onChange={(e) => setDescripcionNuevaLeccion(e.target.value)}
                   className="w-full p-2 mb-2 border rounded"
                 />
+                <input
+                  type="text"
+                  placeholder="URL video ( Sube tu video (mp4) a un servidor ftp y pon la url )"
+                  value={videoNuevaLeccion}
+                  onChange={(e) => setVideoNuevaLeccion(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <MDEditor
+                  value={contenidoLeccionSeleccionada}
+                  onChange={(value) =>
+                    setContenidoLeccionSeleccionada(value || "")
+                  }
+                />
+
                 <button
                   onClick={manejarAgregarLeccion}
                   className="w-full bg-blue-500 text-white p-2 rounded"
