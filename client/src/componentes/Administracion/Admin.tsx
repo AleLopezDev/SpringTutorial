@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import MDEditor from "@uiw/react-md-editor";
+import { Notyf } from "notyf";
 
 interface Usuario {
   id: number;
@@ -69,7 +70,12 @@ interface ExamenesCompletados {
 }
 
 const Admin = () => {
+  const notyf = new Notyf({
+    duration: 4000,
+    position: { x: "right", y: "top" },
+  });
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [esAdmin, setEsAdmin] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<number | null>(
     null
   );
@@ -88,6 +94,99 @@ const Admin = () => {
   );
 
   const navegar = useNavigate();
+
+  /* ----------- Usuarios ------------- */
+
+  // Comprobar si esta autenticado como administrador
+  useEffect(() => {
+    console.log(usuario);
+    if (!usuario.admin) {
+      navegar("/loginadmin");
+    }
+  }, [navegar, usuario]);
+
+  // Comprobar si el usuario es administrador
+
+  const handleUserClick = (userId: number) => {
+    if (usuarioSeleccionado === userId) {
+      setUsuarioSeleccionado(null);
+    } else {
+      setUsuarioSeleccionado(userId);
+
+      // Obtener las lecciones completadas por el usuario
+      axios
+        .get(`http://localhost:5001/api/lecciones_completadas/${userId}`)
+        .then((response) => {
+          console.log(response.data);
+          setLeccionesCompletadas(response.data);
+        })
+        .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
+          console.error("Error fetching completed lessons", error);
+        });
+
+      // Obtener las secciones completadas por el usuario
+      axios
+        .get(`http://localhost:5001/api/secciones_completadas/${userId}`)
+        .then((response) => {
+          setSeccionesCompletadas(response.data);
+        })
+        .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
+          console.error("Error fetching completed sections", error);
+        });
+
+      // Obtener los exámenes completados por el usuario
+      axios
+        .get(`http://localhost:5001/api/examenes_completados/${userId}`)
+        .then((response) => {
+          setExamenesCompletados(response.data);
+        })
+        .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
+          console.error("Error fetching completed exams", error);
+        });
+    }
+  };
+
+  const manejarUsuarioVisible = () => {
+    setListaVisible(!listaVisible);
+    setEsVisibleAgregarSeccion(false);
+    setEsVisibleAgregarLeccion(false);
+    setEsVisibleAgregarExamen(false);
+  };
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5001/api/secciones")
+      .then((response) => {
+        setSecciones(response.data);
+      })
+      .catch((error) => {
+        if (error === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navegar("/login");
+          window.location.reload();
+        }
+        console.error("Error fetching sections", error);
+      });
+  }, [navegar]);
 
   /********** Secciones **********/
   const [secciones, setSecciones] = useState<Seccion[]>([]);
@@ -371,12 +470,6 @@ const Admin = () => {
 
   /* ------------ Examenes ------------ */
   const [examenes, setExamenes] = useState<Examen[]>([]);
-  const [preguntasExamenes, setPreguntasExamenes] = useState<
-    PreguntaExamenes[]
-  >([]);
-  const [respuestasExamenes, setRespuestasExamenes] = useState<
-    RespuestaExamenes[]
-  >([]);
   const [nombreNuevoExamen, setNombreNuevoExamen] = useState("");
   const [
     seccionSeleccionadaParaNuevoExamen,
@@ -385,6 +478,34 @@ const Admin = () => {
   const [examenSeleccionado, setExamenSeleccionado] = useState(0);
   const [nombreExamenEditado, setNombreExamenEditado] = useState("");
   const [esVisibleAgregarExamen, setEsVisibleAgregarExamen] = useState(false);
+  const [examenBorrar, setExamenBorrar] = useState(0);
+
+  // Relacionado con preguntas y respuestas
+  const [preguntaActual, setPreguntaActual] = useState("");
+  const [numeroDeRespuestas, setNumeroDeRespuestas] = useState<number | null>(
+    null
+  );
+
+  const [respuestasActuales, setRespuestasActuales] = useState<string[]>([]);
+  const [respuestaCorrecta, setRespuestaCorrecta] = useState(0);
+  const [seccionExamenSeleccionado, setSeccionExamenSeleccionado] =
+    useState("");
+
+  useEffect(() => {
+    if (examenSeleccionado !== 0) {
+      const examen = examenes.find(
+        (examen) => examen.id === examenSeleccionado
+      );
+      if (examen) {
+        const seccion = secciones.find(
+          (seccion) => seccion.id === examen.seccion_id
+        );
+        if (seccion) {
+          setSeccionExamenSeleccionado(seccion.nombre);
+        }
+      }
+    }
+  }, [examenSeleccionado, examenes, secciones]);
 
   useEffect(() => {
     if (secciones.length > 0) {
@@ -392,8 +513,28 @@ const Admin = () => {
     }
   }, [secciones]);
 
+  useEffect(() => {
+    // Si no hay ningún examen seleccionado y hay exámenes disponibles, selecciona el primero
+    if (examenSeleccionado === 0 && examenes.length > 0) {
+      setExamenSeleccionado(examenes[0].id);
+    }
+  }, [examenSeleccionado, examenes]);
+
+  // Obtener examenes
+  useEffect(() => {
+    // Fetch the list of exams when the component mounts
+    axios
+      .get("http://localhost:5001/api/examenes")
+      .then((response) => {
+        setExamenes(response.data);
+      })
+      .catch((error) => {
+        console.error("Error obteniendo", error);
+      });
+  }, []);
+
   const manejarClickBotonExamenes = () => {
-    setEsVisibleAgregarExamen(true);
+    setEsVisibleAgregarExamen(!esVisibleAgregarExamen);
     setListaVisible(false);
     setEsVisibleAgregarSeccion(false);
     setEsVisibleAgregarLeccion(false);
@@ -401,24 +542,40 @@ const Admin = () => {
 
   const manejarAgregarExamen = () => {
     axios
-      .post("http://localhost:5001/api/examenes", {
-        nombre: nombreNuevoExamen,
-        seccion_id: seccionSeleccionadaParaNuevoExamen,
-      })
+      .get(
+        `http://localhost:5001/api/examenes/seccion/${seccionSeleccionadaParaNuevoExamen}`
+      )
       .then((response) => {
-        // Refetch the list of exams
         axios
-          .get("http://localhost:5001/api/examenes")
+          .post("http://localhost:5001/api/examenes", {
+            nombre: nombreNuevoExamen,
+            seccion_id: seccionSeleccionadaParaNuevoExamen,
+          })
           .then((response) => {
-            setExamenes(response.data);
+            // Refetch the list of exams
+            axios
+              .get("http://localhost:5001/api/examenes")
+              .then((response) => {
+                setExamenes(response.data);
+              })
+              .catch((error) => {
+                console.error("Error obteniendo", error);
+              });
+            setNombreNuevoExamen("");
           })
           .catch((error) => {
-            console.error("Error obteniendo", error);
+            console.error("Error añadiendo examen", error);
           });
-        setNombreNuevoExamen("");
+        notyf.success("Examen añadido correctamente.");
       })
       .catch((error) => {
-        console.error("Error añadiendo examen", error);
+        if (error.response && error.response.status === 409) {
+          // Si el error es 409, significa que ya existe un examen para esta sección
+          notyf.error("Ya existe un examen para esta sección.");
+        } else {
+          // Si el error es cualquier otro, lo tratamos como un error inesperado
+          console.error("Error comprobando si existe el examen", error);
+        }
       });
   };
 
@@ -445,11 +602,61 @@ const Admin = () => {
   };
 
   const manejarBorrarExamen = () => {
-    // Lógica para borrar un examen
+    if (examenSeleccionado !== 0) {
+      axios
+        .delete(`http://localhost:5001/api/examenes/${examenSeleccionado}`)
+        .then((response) => {
+          // Refetch the list of exams
+          axios
+            .get("http://localhost:5001/api/examenes")
+            .then((response) => {
+              setExamenes(response.data);
+              // Reset the selected exam
+              if (examenes.length > 0) {
+                setExamenSeleccionado(examenes[0].id);
+              } else {
+                setExamenSeleccionado(0);
+              }
+            })
+            .catch((error) => {
+              console.error("Error obteniendo", error);
+            });
+        })
+        .catch((error) => {
+          console.error("Error borrando examen", error);
+        });
+    }
   };
 
   const manejarAgregarPreguntaExamen = () => {
-    // Lógica para agregar una pregunta de examen
+    // Se agrega la pregunta
+    axios
+      .post("http://localhost:5001/api/preguntasExamen", {
+        idExamen: examenSeleccionado,
+        pregunta: preguntaActual,
+      })
+      .then((response) => {
+        // Luego, para cada respuesta, agrega la respuesta
+        respuestasActuales.forEach((respuesta, i) => {
+          axios
+            .post("http://localhost:5001/api/respuestasExamen", {
+              idPregunta: response.data.id,
+              respuesta: respuesta,
+              correcta: i + 1 === respuestaCorrecta,
+            })
+            .catch((error) => {
+              console.error("Error añadiendo respuesta", error);
+            });
+        });
+
+        // Se limpian los campos
+        setPreguntaActual("");
+        setRespuestasActuales([]);
+        setRespuestaCorrecta(0);
+      })
+      .catch((error) => {
+        console.error("Error añadiendo pregunta", error);
+      });
   };
 
   const manejarEditarPreguntaExamen = () => {
@@ -460,10 +667,6 @@ const Admin = () => {
     // Lógica para borrar una pregunta de examen
   };
 
-  const manejarAgregarRespuestaExamen = () => {
-    // Lógica para agregar una respuesta de examen
-  };
-
   const manejarEditarRespuestaExamen = () => {
     // Lógica para editar una respuesta de examen
   };
@@ -471,139 +674,6 @@ const Admin = () => {
   const manejarBorrarRespuestaExamen = () => {
     // Lógica para borrar una respuesta de examen
   };
-
-  /* ----------- Usuarios ------------- */
-
-  // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setUsuario(JSON.parse(localStorage.getItem("user") || "{}"));
-    };
-
-    // Escucha los cambios en el almacenamiento local
-    window.addEventListener("storage", handleStorageChange);
-
-    // Limpia el oyente cuando se desmonta el componente
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // Comprobar si esta autenticado
-  useEffect(() => {
-    if (!usuario || !usuario.id) {
-      navegar("/login");
-      window.location.reload();
-    }
-  }, [navegar, usuario]);
-
-  // Comprobar si es admin
-  useEffect(() => {
-    console.log(usuario.admin);
-    if (usuario && usuario.admin) {
-      console.log("El usuario es administrador");
-    } else {
-      console.log("El usuario no es administrador");
-    }
-  }, [usuario]);
-
-  useEffect(() => {
-    axios
-      .get("http://localhost:5001/api/usuarios")
-      .then((response) => {
-        setUsuarios(response.data);
-      })
-      .catch((error) => {
-        if (error === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navegar("/login");
-          window.location.reload();
-        }
-        console.error("Error fetching users", error);
-      });
-  }, [navegar]);
-
-  const handleUserClick = (userId: number) => {
-    if (usuarioSeleccionado === userId) {
-      setUsuarioSeleccionado(null);
-    } else {
-      setUsuarioSeleccionado(userId);
-
-      // Obtener las lecciones completadas por el usuario
-      axios
-        .get(`http://localhost:5001/api/lecciones_completadas/${userId}`)
-        .then((response) => {
-          console.log(response.data);
-          setLeccionesCompletadas(response.data);
-        })
-        .catch((error) => {
-          if (error === 401) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            navegar("/login");
-            window.location.reload();
-          }
-          console.error("Error fetching completed lessons", error);
-        });
-
-      // Obtener las secciones completadas por el usuario
-      axios
-        .get(`http://localhost:5001/api/secciones_completadas/${userId}`)
-        .then((response) => {
-          setSeccionesCompletadas(response.data);
-        })
-        .catch((error) => {
-          if (error === 401) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            navegar("/login");
-            window.location.reload();
-          }
-          console.error("Error fetching completed sections", error);
-        });
-
-      // Obtener los exámenes completados por el usuario
-      axios
-        .get(`http://localhost:5001/api/examenes_completados/${userId}`)
-        .then((response) => {
-          setExamenesCompletados(response.data);
-        })
-        .catch((error) => {
-          if (error === 401) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            navegar("/login");
-            window.location.reload();
-          }
-          console.error("Error fetching completed exams", error);
-        });
-    }
-  };
-
-  const manejarUsuarioVisible = () => {
-    setListaVisible(!listaVisible);
-    setEsVisibleAgregarSeccion(false);
-    setEsVisibleAgregarLeccion(false);
-    setEsVisibleAgregarExamen(false);
-  };
-
-  useEffect(() => {
-    axios
-      .get("http://localhost:5001/api/secciones")
-      .then((response) => {
-        setSecciones(response.data);
-      })
-      .catch((error) => {
-        if (error === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navegar("/login");
-          window.location.reload();
-        }
-        console.error("Error fetching sections", error);
-      });
-  }, [navegar]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100 h-screen">
@@ -977,6 +1047,7 @@ const Admin = () => {
 
               <div className="p-4 bg-white rounded shadow-md mb-5">
                 <h2 className="text-xl font-bold mb-2">Editar examen</h2>
+                <p>Sección: {seccionExamenSeleccionado}</p>
                 <select
                   className="w-full p-2 mb-2 border rounded"
                   value={examenSeleccionado}
@@ -1007,7 +1078,93 @@ const Admin = () => {
 
               <div className="p-4 bg-white rounded shadow-md mb-5">
                 <h2 className="text-xl font-bold mb-2">Eliminar examen</h2>
-                {/* Aquí iría el formulario para eliminar un examen existente */}
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={examenBorrar}
+                  onChange={(e) => setExamenBorrar(Number(e.target.value))}
+                >
+                  {examenes.map((examen) => (
+                    <option key={examen.id} value={examen.id}>
+                      {examen.nombre}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={manejarBorrarExamen}
+                  className="w-full bg-red-500 text-white p-2 rounded"
+                >
+                  Eliminar examen
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow-md mb-5">
+                <h2 className="text-xl font-bold mb-2">
+                  Agregar nueva pregunta
+                </h2>
+                <p>Sección: {seccionExamenSeleccionado}</p>
+                <select
+                  className="w-full p-2 mb-2 border rounded"
+                  value={examenSeleccionado}
+                  onChange={(e) =>
+                    setExamenSeleccionado(Number(e.target.value))
+                  }
+                >
+                  {examenes.map((examen) => (
+                    <option key={examen.id} value={examen.id}>
+                      {examen.nombre}
+                    </option>
+                  ))}
+                </select>
+                <p className="mb-2">
+                  ↑ Selecciona el examen al que pertenece la pregunta
+                </p>
+                <input
+                  type="text"
+                  placeholder="Pregunta"
+                  value={preguntaActual}
+                  onChange={(e) => setPreguntaActual(e.target.value)}
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                <input
+                  type="number"
+                  placeholder="Número de respuestas"
+                  value={numeroDeRespuestas || ""}
+                  onChange={(e) =>
+                    setNumeroDeRespuestas(Number(e.target.value))
+                  }
+                  className="w-full p-2 mb-2 border rounded"
+                />
+                {Array.from(
+                  { length: numeroDeRespuestas || 0 },
+                  (_, i) => i + 1
+                ).map((i) => (
+                  <div key={i}>
+                    <input
+                      type="text"
+                      placeholder={`Respuesta ${i}`}
+                      value={respuestasActuales[i - 1] || ""}
+                      onChange={(e) => {
+                        const newAnswers = [...respuestasActuales];
+                        newAnswers[i - 1] = e.target.value;
+                        setRespuestasActuales(newAnswers);
+                      }}
+                      className="w-full p-2 mb-2 border rounded"
+                    />
+                    <input
+                      type="radio"
+                      name="correctAnswer"
+                      checked={respuestaCorrecta === i}
+                      onChange={() => setRespuestaCorrecta(i)}
+                    />
+                    <label>Es esta la respuesta correcta?</label>
+                  </div>
+                ))}
+                <button
+                  onClick={manejarAgregarPreguntaExamen}
+                  className="w-full bg-blue-500 text-white p-2 rounded"
+                >
+                  Agregar pregunta
+                </button>
               </div>
             </div>
           )}

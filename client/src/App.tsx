@@ -12,6 +12,7 @@ import NotFound from "componentes/NotFound";
 import FAQ from "componentes/FAQ";
 import Examen from "componentes/ExamenComponente";
 import Admin from "componentes/Administracion/Admin";
+import LoginAdmin from "componentes/Administracion/LoginAdmin";
 
 const Navbar = lazy(() => import("./componentes/Navbar"));
 const Login = lazy(() => import("./componentes/Login"));
@@ -134,8 +135,8 @@ function App() {
             }
           />
           <Route path="/examen/:id" element={<Examen />} />
-          <Route path="/paneladministración" element={<Admin />} />
-
+          <Route path="/paneladministracion" element={<Admin />} />
+          <Route path="/loginadmin" element={<LoginAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

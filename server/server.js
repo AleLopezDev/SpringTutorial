@@ -632,21 +632,6 @@ app.post("/api/examenes_completados", (req, res) => {
   );
 });
 
-/*** Panel de administracion ***/
-app.get("/api/usuarios", (req, res) => {
-  connection.query(
-    "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url, admin FROM usuarios",
-    (error, results) => {
-      if (error) {
-        console.error("Error al obtener los datos:", error);
-        res.status(500).send("Error al obtener los datos");
-        return;
-      }
-      res.json(results);
-    }
-  );
-});
-
 // Agregar una nueva sección
 app.post("/api/secciones", (req, res) => {
   const { nombre, descripcion } = req.body;
@@ -775,6 +760,161 @@ app.post("/api/examenes", (req, res) => {
     }
   );
 });
+
+// Comprobación de examen
+app.get("/api/examenes/seccion/:seccionId", (req, res) => {
+  const { seccionId } = req.params;
+
+  connection.query(
+    "SELECT * FROM Examenes WHERE seccion_id = ?",
+    [seccionId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener el examen:", error);
+        res.status(500).send("Error al obtener el examen");
+        return;
+      }
+
+      if (results.length > 0) {
+        res.status(409).send("Ya existe un examen para esta sección");
+      } else {
+        res.status(200).send("No existe un examen para esta sección");
+      }
+    }
+  );
+});
+
+// Editar examen
+app.put("/api/examenes/:id", (req, res) => {
+  const { nombre } = req.body;
+  const { id } = req.params;
+
+  connection.query(
+    "UPDATE Examenes SET nombre = ? WHERE id = ?",
+    [nombre, id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al editar el examen:", error);
+        res.status(500).send("Error al editar el examen");
+        return;
+      }
+      if (results.affectedRows === 0) {
+        res
+          .status(404)
+          .send("No se encontró el examen con el id especificado.");
+        return;
+      }
+      res.status(200).send("Examen editado con éxito.");
+    }
+  );
+});
+
+// Eliminar examen
+app.delete("/api/examenes/:id", (req, res) => {
+  const { id } = req.params;
+
+  // Primero, elimina los examenes completados asociados al examen
+  connection.query(
+    "DELETE FROM examenes_completados WHERE examen_id = ?",
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Error al eliminar los examenes completados:", error);
+        res.status(500).send("Error al eliminar los examenes completados");
+        return;
+      }
+
+      // Luego, elimina las respuestas del examen
+      connection.query(
+        "DELETE RespuestasExamen FROM RespuestasExamen INNER JOIN PreguntasExamen ON RespuestasExamen.idPregunta = PreguntasExamen.id WHERE PreguntasExamen.idExamen = ?",
+        [id],
+        (error, results) => {
+          if (error) {
+            console.error(
+              "Error al eliminar las respuestas del examen:",
+              error
+            );
+            res.status(500).send("Error al eliminar las respuestas del examen");
+            return;
+          }
+
+          // Luego, elimina las preguntas del examen
+          connection.query(
+            "DELETE FROM PreguntasExamen WHERE idExamen = ?",
+            [id],
+            (error, results) => {
+              if (error) {
+                console.error(
+                  "Error al eliminar las preguntas del examen:",
+                  error
+                );
+                res
+                  .status(500)
+                  .send("Error al eliminar las preguntas del examen");
+                return;
+              }
+
+              // Finalmente, elimina el examen
+              connection.query(
+                "DELETE FROM Examenes WHERE id = ?",
+                [id],
+                (error, results) => {
+                  if (error) {
+                    console.error("Error al eliminar el examen:", error);
+                    res.status(500).send("Error al eliminar el examen");
+                    return;
+                  }
+                  res.status(200).send("Examen eliminado con éxito.");
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// Agregar una pregunta
+app.post("/api/preguntasExamen", (req, res) => {
+  const { idExamen, pregunta } = req.body;
+
+  connection.query(
+    "INSERT INTO PreguntasExamen (idExamen, pregunta) VALUES (?, ?)",
+    [idExamen, pregunta],
+    (error, results) => {
+      if (error) {
+        console.error("Error al agregar la pregunta:", error);
+        res.status(500).send("Error al agregar la pregunta");
+        return;
+      }
+
+      // Devuelve el id de la pregunta recién creada
+      res.status(200).json({ id: results.insertId });
+    }
+  );
+});
+
+// Agregar una respuesta
+app.post("/api/respuestasExamen", (req, res) => {
+  const { idPregunta, respuesta, correcta } = req.body;
+
+  connection.query(
+    "INSERT INTO RespuestasExamen (idPregunta, respuesta, correcta) VALUES (?, ?, ?)",
+    [idPregunta, respuesta, correcta],
+    (error, results) => {
+      if (error) {
+        console.error("Error al agregar la respuesta:", error);
+        res.status(500).send("Error al agregar la respuesta");
+        return;
+      }
+
+      res.status(200).send("Respuesta agregada con éxito.");
+    }
+  );
+});
+
+// Admin
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
