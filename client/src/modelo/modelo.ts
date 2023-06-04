@@ -2,7 +2,7 @@
 let minitestTiempo = 300000; 
 
 // Timer para el examen en segundos
-let examenTiempo = 5; 
+let examenTiempo = 15; 
 
 // Tiempo de espera antes de reintentar el examen en milisegundos
 let tiempoEsperaExamen = 15000;

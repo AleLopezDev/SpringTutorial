@@ -95,15 +95,42 @@ const Admin = () => {
 
   const navegar = useNavigate();
 
+  const manejarVolverACurso = () => {
+    navegar("/curso");
+  };
+
   /* ----------- Usuarios ------------- */
 
   // Comprobar si esta autenticado como administrador
   useEffect(() => {
-    console.log(usuario);
     if (!usuario.admin) {
       navegar("/loginadmin");
     }
   }, [navegar, usuario]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios
+        .get("http://localhost:5001/api/usuarios", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((response) => {
+          setUsuarios(response.data);
+        })
+        .catch((error) => {
+          if (error === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navegar("/login");
+            window.location.reload();
+          }
+          console.error("Error fetching users", error);
+        });
+    }
+  }, [navegar]);
 
   // Comprobar si el usuario es administrador
 
@@ -205,27 +232,14 @@ const Admin = () => {
     setEsVisibleAgregarSeccion(!esVisibleAgregarSeccion);
     setListaVisible(false);
     setEsVisibleAgregarLeccion(false);
-  };
-
-  const manejarBorradoSecciones = (id: number) => {
-    axios
-      .delete(`http://localhost:5001/api/secciones/${id}`)
-      .then((response) => {
-        // Actualizar el estado de las secciones para reflejar la eliminación
-        setSecciones(secciones.filter((seccion) => seccion.id !== id));
-      })
-      .catch((error) => {
-        if (error === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navegar("/login");
-          window.location.reload();
-        }
-        console.error("Error deleting section", error);
-      });
+    setEsVisibleAgregarExamen(false);
   };
 
   const manejarAgregarSeccion = () => {
+    if (!nombreNuevaSeccion.trim()) {
+      notyf.error("El nombre de la sección no puede estar vacío.");
+      return;
+    }
     axios
       .post("http://localhost:5001/api/secciones", {
         nombre: nombreNuevaSeccion,
@@ -262,6 +276,11 @@ const Admin = () => {
   };
 
   const manejarEditarSeccion = () => {
+    if (!nombreSeccionEditada.trim()) {
+      notyf.error("El nombre nuevo de la sección no puede estar vacío.");
+      return;
+    }
+
     axios
       .put(`http://localhost:5001/api/secciones/${seccionSeleccionada}`, {
         nombre: nombreSeccionEditada,
@@ -366,6 +385,7 @@ const Admin = () => {
     setEsVisibleAgregarLeccion(!esVisibleAgregarLeccion);
     setListaVisible(false);
     setEsVisibleAgregarSeccion(false);
+    setEsVisibleAgregarExamen(false);
   };
 
   const manejarBorradoLecciones = (id: number) => {
@@ -385,6 +405,11 @@ const Admin = () => {
   };
 
   const manejarAgregarLeccion = () => {
+    if (!nombreNuevaLeccion.trim()) {
+      notyf.error("El nombre de la lección no puede estar vacío.");
+      return;
+    }
+
     axios
       .post("http://localhost:5001/api/lecciones", {
         nombre: nombreNuevaLeccion,
@@ -430,6 +455,10 @@ const Admin = () => {
   };
 
   const manejarEditarLeccion = () => {
+    if (!nombreLeccionEditada.trim()) {
+      notyf.error("El nombre de la lección no puede estar vacío.");
+      return;
+    }
     axios
       .put(`http://localhost:5001/api/lecciones/${leccionSeleccionada}`, {
         nombre: nombreLeccionEditada,
@@ -541,6 +570,10 @@ const Admin = () => {
   };
 
   const manejarAgregarExamen = () => {
+    if (!nombreNuevoExamen.trim()) {
+      notyf.error("El nombre del examen no puede estar vacío.");
+      return;
+    }
     axios
       .get(
         `http://localhost:5001/api/examenes/seccion/${seccionSeleccionadaParaNuevoExamen}`
@@ -580,6 +613,11 @@ const Admin = () => {
   };
 
   const manejarEditarExamen = () => {
+    if (!nombreExamenEditado.trim()) {
+      notyf.error("El nombre del examen no puede estar vacío.");
+      return;
+    }
+
     axios
       .put(`http://localhost:5001/api/examenes/${examenSeleccionado}`, {
         nombre: nombreExamenEditado,
@@ -629,6 +667,11 @@ const Admin = () => {
   };
 
   const manejarAgregarPreguntaExamen = () => {
+    if (!preguntaActual.trim() || respuestasActuales.length === 0) {
+      notyf.error("La pregunta y las respuestas no pueden estar vacías.");
+      return;
+    }
+
     // Se agrega la pregunta
     axios
       .post("http://localhost:5001/api/preguntasExamen", {
@@ -677,38 +720,47 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100 h-screen">
-      <div className="w-full md:w-64 bg-white p-4 shadow-lg mt-1 h-screen overflow-auto">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Administración
-        </h2>
-        <button
-          className="w-full bg-blue-500 text-white p-2 rounded mb-2"
-          onClick={manejarUsuarioVisible}
-        >
-          Usuarios
-        </button>
-        <button
-          className="w-full bg-blue-500 text-white p-2 rounded mb-2"
-          onClick={manejarClickBotonSecciones}
-        >
-          Secciones
-        </button>
-        <button
-          className="w-full bg-blue-500 text-white p-2 rounded mb-2"
-          onClick={manejarClickBotonLecciones}
-        >
-          Lecciones
-        </button>
+      <div className="w-full md:w-64 bg-white p-4 shadow-lg mt-1 h-screen overflow-auto flex flex-col">
+        <div className="mb-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Administración
+          </h2>
+          <button
+            className="w-full bg-blue-500 text-white p-2 rounded mb-2"
+            onClick={manejarUsuarioVisible}
+          >
+            Usuarios
+          </button>
+          <button
+            className="w-full bg-blue-500 text-white p-2 rounded mb-2"
+            onClick={manejarClickBotonSecciones}
+          >
+            Secciones
+          </button>
+          <button
+            className="w-full bg-blue-500 text-white p-2 rounded mb-2"
+            onClick={manejarClickBotonLecciones}
+          >
+            Lecciones
+          </button>
+
+          <button
+            className="w-full bg-blue-500 text-white p-2 mb-2 rounded"
+            onClick={manejarClickBotonExamenes}
+          >
+            Examenes
+          </button>
+
+          <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
+            Mini-Tests
+          </button>
+        </div>
 
         <button
-          className="w-full bg-blue-500 text-white p-2 mb-2 rounded"
-          onClick={manejarClickBotonExamenes}
+          className="w-full bg-yellow-500 text-white p-2 rounded"
+          onClick={manejarVolverACurso}
         >
-          Examenes
-        </button>
-
-        <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
-          Mini-Tests
+          Volver
         </button>
       </div>
       <main className="flex-1 p-4 h-screen overflow-auto">
@@ -829,35 +881,6 @@ const Admin = () => {
                   className="w-full bg-green-500 text-white p-2 rounded"
                 >
                   Editar sección
-                </button>
-              </div>
-
-              <div className="p-4 bg-white rounded shadow-md mb-5">
-                <h2 className="text-xl font-bold mb-2">Eliminar sección</h2>
-
-                <select
-                  className="w-full p-2 mb-2 border rounded"
-                  value={seccionSeleccionada}
-                  onChange={(e) =>
-                    setSeccionSeleccionada(Number(e.target.value))
-                  }
-                >
-                  {secciones.map((seccion) => (
-                    <option key={seccion.id} value={seccion.id}>
-                      {seccion.nombre}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => {
-                    if (seccionSeleccionada !== 0) {
-                      manejarBorradoSecciones(seccionSeleccionada);
-                    }
-                  }}
-                  className="w-full bg-red-500 text-white p-2 rounded"
-                >
-                  Eliminar sección
                 </button>
               </div>
             </div>

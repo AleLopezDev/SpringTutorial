@@ -49,7 +49,24 @@ const PaginaCurso = () => {
   );
 
   const handleExamenClick = (examenId: any) => {
-    navegar(`/examen/${examenId}`);
+    const horaUltimoIntentoExamen = localStorage.getItem(
+      "horaUltimoIntentoExamen"
+    );
+    const tiempoEsperaExamen = 15000; // 15 segundos
+
+    if (
+      horaUltimoIntentoExamen &&
+      Date.now() - Number(horaUltimoIntentoExamen) < tiempoEsperaExamen
+    ) {
+      // El usuario ha intentado tomar el examen recientemente
+      notyf.error(
+        "No puedes volver a realizar el examen hasta que pasen " +
+          tiempoEsperaExamen / 1000 +
+          " segundos"
+      );
+    } else {
+      navegar(`/examen/${examenId}`);
+    }
   };
 
   // Notificaciones

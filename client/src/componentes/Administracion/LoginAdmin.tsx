@@ -3,16 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function FormularioLogin() {
-  interface Usuario {
-    id: number;
-    nombre: string;
-    correo_electronico: string;
-    contrasena: string;
-    ultima_leccion_vista: number;
-    imagen_url: string;
-    admin: boolean;
-  }
-
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
   const navegar = useNavigate();

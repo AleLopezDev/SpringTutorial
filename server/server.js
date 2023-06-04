@@ -33,6 +33,39 @@ connection.connect((error) => {
   console.log("Conexión exitosa a la base de datos");
 });
 
+app.get("/api/usuarios", (req, res) => {
+  // Obtén el token de autenticación del encabezado de la solicitud
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    res.status(401).send("No se proporcionó un token de autenticación");
+    return;
+  }
+
+  // El encabezado de autorización generalmente tiene el formato "Bearer [token]"
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // Decodifica el token para obtener el ID del usuario
+    const decodedToken = jwt.verify(token, "your_jwt_secret");
+    const userId = decodedToken.id;
+    connection.query(
+      "SELECT id, nombre, correo_electronico, ultima_leccion_vista, imagen_url, admin FROM usuarios",
+      (error, results) => {
+        if (error) {
+          console.error("Error al obtener los datos:", error);
+          res.status(500).send("Error al obtener los datos");
+          return;
+        }
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    res.status(401).send("Token inválido");
+    return;
+  }
+});
+
 // Actualzar nombre usuario
 app.put("/api/usuarios/:id", (req, res) => {
   const { id } = req.params;
@@ -104,6 +137,43 @@ app.get("/api/lecciones", (req, res) => {
       res.json(results);
     }
   );
+});
+
+app.get("/api/leccionesOrdenadas", (req, res) => {
+  // Obtén el token de autenticación del encabezado de la solicitud
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    res.status(401).send("No se proporcionó un token de safas");
+    return;
+  }
+
+  // El encabezado de autorización generalmente tiene el formato "Bearer [token]"
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // Decodifica el token para obtener el ID del usuario
+    const decodedToken = jwt.verify(token, "your_jwt_secret");
+
+    connection.query(
+      "SELECT id, seccion_id, nombre, video_url FROM lecciones ORDER BY seccion_id ASC, id ASC",
+      (error, results) => {
+        if (error) {
+          console.error("Error al obtener los datos:", error);
+          res.status(500).send("Error al obtener los datos");
+          return;
+        }
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      res.status(401).send("Token de autenticación expirado");
+    } else {
+      console.error("Error al decodificar el token de autenticación:", error);
+      res.status(401).send("Token de autenticación inválido");
+    }
+  }
 });
 
 app.get("/api/lecciones_completadas/:userId", (req, res) => {

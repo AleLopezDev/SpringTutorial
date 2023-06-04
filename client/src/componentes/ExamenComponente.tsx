@@ -69,7 +69,6 @@ const ExamenComponente = () => {
           getTiempoEsperaExamen() / 1000 +
           " segundos"
       );
-      navigate("/curso");
     }
   }, [navigate, notyf]);
 
@@ -183,6 +182,7 @@ const ExamenComponente = () => {
   }, [examenEnviado, preguntas, respuestas, respuestasSeleccionadas]);
 
   const manejarEnvio = () => {
+    localStorage.setItem("horaUltimoIntentoExamen", Date.now().toString());
     const nuevosResultadosRespuestas: { [key: number]: boolean } = {};
     let respuestasCorrectas = 0; // Inicializa la variable aquí
 
@@ -249,27 +249,32 @@ const ExamenComponente = () => {
 
     // Detener el temporizador
     localStorage.setItem("examenTomado", "true");
-    setTiempoRestante(null);
+    setTiempoRestante(0);
     localStorage.removeItem("tiempoRestante");
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="min-h-screen py-2 bg-gray-100">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-red-500">
+          Tiempo restante: {tiempoRestante} segundos
+        </h2>
+      </div>
       {examen.map((examen) => (
         <div
           key={examen.id}
-          className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-md z-10"
+          className="max-w-5xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-md"
         >
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900">
               {examen.nombre}
             </h2>
           </div>
-          {preguntas.map((pregunta) => (
-            <div key={pregunta.id} className="mt-8 space-y-6">
-              <p className="text-2xl font-semibold text-gray-900 mt">
-                {pregunta.Pregunta}
-                {(tiempoRestante === null || examenEnviado) && ( // Solo muestra los resultados cuando el examen ha terminado
+          {preguntas.map((pregunta, index) => (
+            <div key={pregunta.id} className="mt-8">
+              <p className="text-2xl font-semibold text-gray-900">
+                {index + 1}. {pregunta.Pregunta}
+                {(tiempoRestante === null || examenEnviado) && (
                   <>
                     {resultadosRespuestas[pregunta.id] === true && (
                       <span className="ml-2">✅</span>
@@ -283,42 +288,40 @@ const ExamenComponente = () => {
               {respuestas
                 .filter((respuesta) => respuesta.idPregunta === pregunta.id)
                 .map((respuesta) => (
-                  <div
+                  <label
                     key={respuesta.id}
-                    className="mt-1 rounded-md shadow-sm -space-y-px"
+                    className="block mt-3 text-lg text-gray-700"
                   >
-                    <div>
-                      <label className="px-3 py-2 text-xl text-gray-700 rounded-md focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300">
-                        <input
-                          type="radio"
-                          name={`pregunta_${pregunta.id}`}
-                          value={respuesta.id}
-                          checked={
-                            respuestasSeleccionadas[pregunta.id] ===
-                            respuesta.id
-                          }
-                          onChange={() =>
-                            manejarCambioRespuesta(pregunta.id, respuesta.id)
-                          }
-                        />
-                        {respuesta.Respuesta}
-                      </label>
-                    </div>
-                  </div>
+                    <input
+                      className="mr-2 leading-tight"
+                      type="radio"
+                      name={`pregunta_${pregunta.id}`}
+                      value={respuesta.id}
+                      checked={
+                        respuestasSeleccionadas[pregunta.id] === respuesta.id
+                      }
+                      onChange={() =>
+                        manejarCambioRespuesta(pregunta.id, respuesta.id)
+                      }
+                    />
+                    <span className="text-base leading-normal">
+                      {respuesta.Respuesta}
+                    </span>
+                  </label>
                 ))}
             </div>
           ))}
           <button
-            className="mt-8 w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full py-2 px-4 mt-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             onClick={manejarEnvio}
-            disabled={tiempoRestante === null} // Desactiva el botón si el tiempo restante es nulo
+            disabled={tiempoRestante === null}
           >
             Enviar Examen
           </button>
-          {(tiempoRestante === null || examenEnviado) && ( // Muestra el botón de "Volver al inicio" cuando el examen ha terminado o el tiempo se ha acabado
+          {(tiempoRestante === null || examenEnviado) && (
             <button
-              className="mt-8 w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              onClick={() => navigate("/curso")} // Navega al inicio
+              className="w-full py-2 px-4 mt-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={() => navigate("/curso")}
             >
               Volver al inicio
             </button>
