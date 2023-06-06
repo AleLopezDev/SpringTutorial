@@ -1,3 +1,4 @@
+import { Notyf } from "notyf";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -17,6 +18,7 @@ const Login = () => {
   };
 
   const navigate = useNavigate();
+  const notyf = new Notyf();
 
   const handleLogin = async () => {
     try {
@@ -65,6 +67,45 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!correo_electronico) {
+      setErrorMensaje("Por favor, introduce tu correo electrónico");
+      return;
+    }
+    setErrorMensaje("");
+
+    try {
+      const respuesta = await fetch(
+        "http://localhost:5001/api/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ correo_electronico }),
+        }
+      );
+
+      if (respuesta.ok) {
+        notyf.success(
+          "Nuestros administradores ya han recibido tu solicitud, en breve se pondrán en contacto contigo"
+        );
+      } else {
+        setErrorMensaje(
+          "Error al enviar el correo electrónico de restablecimiento de contraseña"
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error de red al enviar el correo electrónico de restablecimiento de contraseña:",
+        error
+      );
+      setErrorMensaje(
+        "Error de red al enviar el correo electrónico de restablecimiento de contraseña"
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-8 rounded-lg shadow-md w-[500px] space-y-4">
@@ -91,14 +132,22 @@ const Login = () => {
           Iniciar sesión
         </button>
 
-        <div className="mt-4 text-left">
-          <span className="font-bold">¿No tienes una cuenta?</span>
-          <Link
-            to="/registro"
-            className="font-bold text-blue-500 hover:underline ml-1"
+        <div className="flex justify-between items-center mt-4">
+          <div>
+            <span className="font-bold">¿No tienes una cuenta?</span>
+            <Link
+              to="/registro"
+              className="font-bold text-blue-500 hover:underline ml-1"
+            >
+              Regístrate
+            </Link>
+          </div>
+          <a
+            className="text-blue-500 hover:underline "
+            onClick={handleForgotPassword}
           >
-            Regístrate
-          </Link>
+            Olvidé mi contraseña
+          </a>
         </div>
       </div>
     </div>

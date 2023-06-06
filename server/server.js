@@ -33,6 +33,31 @@ connection.connect((error) => {
   console.log("Conexión exitosa a la base de datos");
 });
 
+app.post("/api/forgot-password", async (req, res) => {
+  const { correo_electronico } = req.body;
+
+  // Envía el correo electrónico de notificación
+  let mailOptions = {
+    from: "aprendespringboot@gmail.com",
+    to: "aprendespringboot@gmail.com",
+    subject: "Notificación de olvido de contraseña",
+    text: `El usuario con el correo electrónico ${correo_electronico} ha olvidado su contraseña.`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res
+        .status(500)
+        .send("Error al enviar el correo electrónico de notificación");
+    } else {
+      res.send(
+        "Se ha enviado un correo electrónico de notificación a aprendespringboot@gmail.com"
+      );
+    }
+  });
+});
+
 app.get("/api/usuarios", (req, res) => {
   // Obtén el token de autenticación del encabezado de la solicitud
   const authHeader = req.headers.authorization;
