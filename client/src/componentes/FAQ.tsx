@@ -14,6 +14,21 @@ const FAQ = () => {
       answer:
         "Tailwind CSS es un framework de CSS de utilidad de primera clase que te permite construir diseños personalizados directamente en tu HTML.",
     },
+    {
+      question: "¿Por qué no me da como completada la lección?",
+      answer:
+        "Asegúrate de que has completado correctamente el Mini-Test, al final de cada lección.",
+    },
+    {
+      question: "¿Cómo puedo contactar con el profesor?",
+      answer: "Puedes contactar con el profesor en el correo: admin@admin.com",
+    },
+    {
+      question: "¿Cómo puedo obtener el certificado final?",
+      answer:
+        "Para obtener el certificado final debes completar el curso y ahcer el último examen.",
+    },
+
     // Puedes agregar más preguntas aquí
   ];
 
@@ -26,7 +41,7 @@ const FAQ = () => {
   };
 
   return (
-    <div className="p-4 mt-20 ml-72 max-w-xl">
+    <div className="p-4 mt-20 ml-72 max-w-5xl">
       <h2 className="text-2xl font-bold mb-6 text-left">
         Preguntas Frecuentes
       </h2>

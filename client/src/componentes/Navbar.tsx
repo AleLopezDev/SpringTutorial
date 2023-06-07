@@ -31,31 +31,10 @@ const Navbar = ({ user }: { user: any }) => {
             </RouterLink>
           </li>
           <li>
-            <Link
-              activeClass="active"
-              to="info"
-              spy={true}
-              smooth={true}
-              offset={-70}
-              duration={500}
-              className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
-            >
-              Comunidad
-            </Link>
-          </li>
-          <li>
-            <RouterLink to="/">
-              <Link
-                activeClass="active"
-                to="creador"
-                spy={true}
-                smooth={true}
-                offset={-70}
-                duration={500}
-                className="text-white text-base py-4 px-6 transition-colors duration-700 hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid cursor-pointer "
-              >
-                Ranking
-              </Link>
+            <RouterLink to="/certificacion">
+              <span className="text-white font-poppins py-4 px-6 transition-colors border-transparent hover:text-green-500 hover:border-green-500 hover:border-2 hover:border-solid duration-700">
+                Certificacion
+              </span>
             </RouterLink>
           </li>
           <li>

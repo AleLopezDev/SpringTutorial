@@ -143,6 +143,7 @@ const Login = () => {
             </Link>
           </div>
           <a
+            href="#"
             className="text-blue-500 hover:underline "
             onClick={handleForgotPassword}
           >

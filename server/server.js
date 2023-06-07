@@ -1009,7 +1009,41 @@ app.post("/api/respuestasExamen", (req, res) => {
   );
 });
 
-// Admin
+// Verifica si el usuario ha completado todas las secciones
+app.get("/api/estado_curso/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  // Primero, obtener la última sección de la tabla de secciones
+  connection.query(
+    "SELECT * FROM secciones ORDER BY id DESC LIMIT 1",
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener las secciones:", error);
+        res.status(500).send("Error al obtener las secciones");
+        return;
+      }
+
+      // Guarda el id de la última sección
+      const ultimoSeccionId = results[0].id;
+
+      // Luego, verifica si el usuario ha completado esa sección
+      connection.query(
+        "SELECT * FROM secciones_completadas WHERE usuario_id = ? AND seccion_id = ?",
+        [userId, ultimoSeccionId],
+        (error, results) => {
+          if (error) {
+            console.error("Error al obtener las secciones completadas:", error);
+            res.status(500).send("Error al obtener las secciones completadas");
+            return;
+          }
+
+          // Devuelve true si el usuario ha completado la última sección, false en caso contrario
+          res.json({ ultimoSeccionCompletada: results.length > 0 });
+        }
+      );
+    }
+  );
+});
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
