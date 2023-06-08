@@ -50,6 +50,7 @@ const Perfil = ({ user }: { user: any }) => {
           alt={user.name}
           className="w-24 h-24 rounded-full mx-auto"
         />
+
         <div className="text-center">
           {isEditing ? (
             <input

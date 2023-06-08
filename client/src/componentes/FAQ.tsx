@@ -26,7 +26,7 @@ const FAQ = () => {
     {
       question: "¿Cómo puedo obtener el certificado final?",
       answer:
-        "Para obtener el certificado final debes completar el curso y ahcer el último examen.",
+        "Para obtener el certificado final debes completar el curso y hacer el último examen.",
     },
 
     // Puedes agregar más preguntas aquí

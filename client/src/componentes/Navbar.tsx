@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRightFromBracket, faUser } from "@fortawesome/free-solid-svg-icons";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { faLeaf } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-scroll";
 import { Link as RouterLink } from "react-router-dom";
 
 /* Definimo un parametro llamado user de tipo any, esta esperando recibir el objeto user */

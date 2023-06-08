@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Notyf } from "notyf";
+import certificado from "../../assets/certificado.png";
 
 const Certificacion = () => {
   const navegar = useNavigate();
@@ -69,12 +70,12 @@ const Certificacion = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="p-8 bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="flex justify-center">
           <img
-            className="h-24 w-24 object-cover rounded-full"
-            src="https://via.placeholder.com/150"
+            className="h-24 w-24 object-cover "
+            src={certificado}
             alt="ChitChat Logo"
           />
         </div>
