@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Notyf } from "notyf";
 import certificado from "../../assets/certificado.png";
+import jsPDF from "jspdf";
+import { v4 as uuidv4 } from "uuid";
 
 const Certificacion = () => {
   const navegar = useNavigate();
@@ -15,6 +17,24 @@ const Certificacion = () => {
     duration: 4000,
     position: { x: "right", y: "top" },
   });
+
+  const generarCertificado = () => {
+    const doc = new jsPDF();
+    const certificadoId = uuidv4();
+
+    doc.setFontSize(22);
+    doc.text("Certificado de Finalización", 105, 50, { align: "center" });
+    doc.setFontSize(16);
+    doc.text(`Este certificado se otorga a ${usuario.nombre}`, 105, 60, {
+      align: "center",
+    });
+    doc.text("por completar el curso de React", 105, 70, { align: "center" });
+    doc.text(`ID del Certificado: ${certificadoId}`, 105, 80, {
+      align: "center",
+    });
+
+    doc.save("certificado.pdf");
+  };
 
   // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
   useEffect(() => {
@@ -86,7 +106,10 @@ const Certificacion = () => {
           <p className="text-gray-500 mb-2">
             Otorgado por: AprendeSpringBoot Academy
           </p>
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full"
+            onClick={generarCertificado}
+          >
             Descargar
           </button>
         </div>
