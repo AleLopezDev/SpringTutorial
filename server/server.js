@@ -554,12 +554,12 @@ app.post("/api/login", async (req, res) => {
 
 // Insertar las secciones completadas por el usuario
 app.post("/api/secciones_completadas", (req, res) => {
-  const { seccion_id, usuario_id } = req.body;
+  const { examen_id, usuario_id } = req.body;
 
   // Comprobar si el usuario ya ha completado esta sección
   connection.query(
     "SELECT * FROM secciones_completadas WHERE seccion_id = ? AND usuario_id = ?",
-    [seccion_id, usuario_id],
+    [examen_id, usuario_id],
     (err, existingEntry) => {
       if (err) {
         console.error("Error al seleccionar de secciones_completadas:", err);
@@ -580,7 +580,7 @@ app.post("/api/secciones_completadas", (req, res) => {
 
       connection.query(
         "INSERT INTO secciones_completadas (seccion_id, usuario_id, fecha_completada) VALUES (?, ?, ?)",
-        [seccion_id, usuario_id, fecha_completada],
+        [examen_id, usuario_id, fecha_completada],
         (err) => {
           if (err) {
             console.error("Error al insertar en secciones_completadas:", err);
