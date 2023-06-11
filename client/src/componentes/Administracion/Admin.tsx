@@ -22,6 +22,19 @@ interface Examen {
   nombre: string;
 }
 
+interface PreguntaExamenes {
+  id: number;
+  idExamen: number;
+  Pregunta: string;
+}
+
+interface RespuestaExamenes {
+  id: number;
+  idPregunta: number;
+  Respuesta: string;
+  Correcta: boolean;
+}
+
 interface LeccionesCompletadas {
   id: number;
   leccion_id: number;
@@ -62,7 +75,7 @@ const Admin = () => {
     position: { x: "right", y: "top" },
   });
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-
+  const [esAdmin, setEsAdmin] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<number | null>(
     null
   );
@@ -76,7 +89,9 @@ const Admin = () => {
   const [examenesCompletados, setExamenesCompletados] = useState<
     ExamenesCompletados[]
   >([]);
-  const [usuario] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
+  const [usuario, setUsuario] = useState(
+    JSON.parse(localStorage.getItem("user") || "{}")
+  );
 
   const navegar = useNavigate();
 
@@ -685,6 +700,22 @@ const Admin = () => {
       .catch((error) => {
         console.error("Error añadiendo pregunta", error);
       });
+  };
+
+  const manejarEditarPreguntaExamen = () => {
+    // Lógica para editar una pregunta de examen
+  };
+
+  const manejarBorrarPreguntaExamen = () => {
+    // Lógica para borrar una pregunta de examen
+  };
+
+  const manejarEditarRespuestaExamen = () => {
+    // Lógica para editar una respuesta de examen
+  };
+
+  const manejarBorrarRespuestaExamen = () => {
+    // Lógica para borrar una respuesta de examen
   };
 
   return (

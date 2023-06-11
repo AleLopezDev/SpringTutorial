@@ -554,12 +554,12 @@ app.post("/api/login", async (req, res) => {
 
 // Insertar las secciones completadas por el usuario
 app.post("/api/secciones_completadas", (req, res) => {
-  const { examen_id, usuario_id } = req.body;
+  const { seccion_id, usuario_id } = req.body;
 
   // Comprobar si el usuario ya ha completado esta sección
   connection.query(
     "SELECT * FROM secciones_completadas WHERE seccion_id = ? AND usuario_id = ?",
-    [examen_id, usuario_id],
+    [seccion_id, usuario_id],
     (err, existingEntry) => {
       if (err) {
         console.error("Error al seleccionar de secciones_completadas:", err);
@@ -580,7 +580,7 @@ app.post("/api/secciones_completadas", (req, res) => {
 
       connection.query(
         "INSERT INTO secciones_completadas (seccion_id, usuario_id, fecha_completada) VALUES (?, ?, ?)",
-        [examen_id, usuario_id, fecha_completada],
+        [seccion_id, usuario_id, fecha_completada],
         (err) => {
           if (err) {
             console.error("Error al insertar en secciones_completadas:", err);
@@ -741,25 +741,6 @@ app.post("/api/secciones", (req, res) => {
         return;
       }
       res.status(201).send("Sección agregada con éxito.");
-    }
-  );
-});
-
-// Obtener seccion anterior a la leccion actual para que en la url se verifique que el usuario haya completado la seccion anterior
-app.get("/api/leccion/:leccionId/seccion", (req, res) => {
-  const { leccionId } = req.params;
-
-  connection.query(
-    "SELECT secciones.* FROM secciones INNER JOIN lecciones ON secciones.id = lecciones.seccion_id WHERE lecciones.id = ?",
-    [leccionId],
-    (error, results) => {
-      if (error) {
-        console.error("Error al obtener la sección de la lección:", error);
-        res.status(500).send("Error al obtener la sección de la lección");
-        return;
-      }
-
-      res.json(results[0]); // Devuelve la sección de la lección
     }
   );
 });
