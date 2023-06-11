@@ -163,12 +163,17 @@ const LeccionPage = () => {
   };
 
   const handleLeccionSiguiente = () => {
-    if (leccionSiguiente) {
-      if (leccion && !seccionesCompletadas.includes(leccion.seccion_id)) {
-        notyf.error("Debes completar la sección actual primero.");
-      } else {
-        navegar(`/leccion/${leccionSiguiente.id}`);
-      }
+    if (
+      leccion &&
+      leccionSiguiente &&
+      leccion.seccion_id !== leccionSiguiente.seccion_id &&
+      !seccionesCompletadas.includes(leccion.seccion_id)
+    ) {
+      notyf.error(
+        "Debes completar la sección actual primero, realizando el examen."
+      );
+    } else if (leccionSiguiente) {
+      navegar(`/leccion/${leccionSiguiente.id}`);
     }
   };
 
@@ -210,9 +215,24 @@ const LeccionPage = () => {
           `http://localhost:5001/api/lecciones/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setLeccion(response.data);
-      } catch (error) {
-        if (error === 401) {
+        const leccionActual = response.data;
+
+        // Obtén la sección de la lección actual
+        const responseSeccionActual = await axios.get(
+          `http://localhost:5001/api/leccion/${id}/seccion`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const seccionActual = responseSeccionActual.data;
+
+        console.log("ID de la sección actual:", seccionActual.id);
+        console.log("Secciones completadas:", seccionesCompletadas);
+
+        setLeccion(leccionActual);
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          // Si el servidor devuelve un error 404, redirige al usuario a la página del curso
+          navegar("/curso");
+        } else if (error.response && error.response.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           navegar("/login");
@@ -221,7 +241,33 @@ const LeccionPage = () => {
       }
     };
     fetchLeccion();
-  }, [id, navegar]);
+  }, [id, navegar, seccionesCompletadas]);
+
+  useEffect(() => {
+    // Verifica si el usuario ha completado la sección anterior
+    if (leccion) {
+      if (leccion.seccion_id === 1) {
+        // Si la sección actual es 1, no hagas nada
+      } else if (seccionesCompletadas.includes(leccion.seccion_id - 1)) {
+        // Si la sección anterior ha sido completada, no hagas nada
+      } else {
+        console.log("La sección anterior no ha sido completada");
+        navegar("/curso"); // Redirige al usuario a la página principal
+      }
+    }
+  }, [leccion, seccionesCompletadas, navegar]);
+
+  useEffect(() => {
+    // Verifica si el usuario ha completado la sección anterior
+    if (
+      leccion &&
+      leccion.seccion_id !== 1 &&
+      !seccionesCompletadas.includes(leccion.seccion_id - 1)
+    ) {
+      console.log("La sección anterior no ha sido completada");
+      navegar("/curso"); // Redirige al usuario a la página principal
+    }
+  }, [leccion, seccionesCompletadas, navegar]);
 
   // MANEJADOR DE PREGUNTAS Aleatorias
 

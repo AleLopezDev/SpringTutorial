@@ -745,6 +745,25 @@ app.post("/api/secciones", (req, res) => {
   );
 });
 
+// Obtener seccion anterior a la leccion actual para que en la url se verifique que el usuario haya completado la seccion anterior
+app.get("/api/leccion/:leccionId/seccion", (req, res) => {
+  const { leccionId } = req.params;
+
+  connection.query(
+    "SELECT secciones.* FROM secciones INNER JOIN lecciones ON secciones.id = lecciones.seccion_id WHERE lecciones.id = ?",
+    [leccionId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener la sección de la lección:", error);
+        res.status(500).send("Error al obtener la sección de la lección");
+        return;
+      }
+
+      res.json(results[0]); // Devuelve la sección de la lección
+    }
+  );
+});
+
 // Editar una sección existente
 app.put("/api/secciones/:id", (req, res) => {
   const { id } = req.params;
