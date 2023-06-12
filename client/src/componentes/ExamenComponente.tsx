@@ -48,14 +48,6 @@ const ExamenComponente = () => {
   }, [tiempoRestante]);
 
   const manejarEnvio = useCallback(() => {
-    console.log("Enviando el examen...");
-
-    // Verificar si hay respuestas seleccionadas
-    if (Object.keys(respuestasSeleccionadas).length === 0) {
-      console.log("No se seleccionaron respuestas.");
-      return;
-    }
-
     localStorage.setItem("horaUltimoIntentoExamen", Date.now().toString());
 
     const nuevosResultadosRespuestas: { [key: number]: boolean } = {};
