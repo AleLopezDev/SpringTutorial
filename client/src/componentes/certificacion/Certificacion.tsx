@@ -3,19 +3,60 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Notyf } from "notyf";
 import certificado from "../../assets/certificado.png";
+import jsPDF from "jspdf";
+import { v4 as uuidv4 } from "uuid";
 
 const Certificacion = () => {
   const navegar = useNavigate();
-  const [ultimoSeccionCompletada, setUltimoSeccionCompletada] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [progreso, setProgreso] = useState(0);
   const [usuario, setUsuario] = useState(
     JSON.parse(localStorage.getItem("user") || "{}")
   );
+
+  const [isLoading, setIsLoading] = useState(true);
   const notyf = new Notyf({
     duration: 4000,
     position: { x: "right", y: "top" },
   });
 
+  const generarCertificado = () => {
+    const doc = new jsPDF();
+    const certificadoId = uuidv4();
+
+    doc.setFontSize(22);
+    doc.text("Certificado de Finalización", 105, 50, { align: "center" });
+    doc.setFontSize(16);
+    doc.text(`Este certificado se otorga a ${usuario.nombre}`, 105, 60, {
+      align: "center",
+    });
+    doc.text("por completar el curso de React", 105, 70, { align: "center" });
+    doc.text(`ID del Certificado: ${certificadoId}`, 105, 80, {
+      align: "center",
+    });
+
+    doc.save("certificado.pdf");
+  };
+
+  useEffect(() => {
+    const fetchProgreso = async () => {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const id = user.id;
+
+      setIsLoading(true); // comienza la solicitud
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/progreso/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProgreso(response.data.porcentajeCompletado);
+      } catch (error) {
+        console.error(error);
+      }
+      setIsLoading(false); // finaliza la solicitud
+    };
+    fetchProgreso();
+  }, [navegar]);
   // Si el usuario no está autenticado, redirigirlo a la página de inicio de sesión
   useEffect(() => {
     const handleStorageChange = () => {
@@ -31,42 +72,33 @@ const Certificacion = () => {
     };
   }, []);
 
+  // Obtener progreso
   useEffect(() => {
-    const userId = usuario.id;
-    console.log("userId", userId);
-    axios
-      .get(`http://localhost:5001/api/estado_curso/${userId}`)
-      .then((response) => {
-        setUltimoSeccionCompletada(response.data.ultimoSeccionCompletada);
-        setCargando(false);
-      })
-      .catch((error) => {
-        if (error.response) {
-          // El servidor respondió con un estado de error
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        } else if (error.request) {
-          // La solicitud fue hecha pero no se recibió ninguna respuesta
-          console.log(error.request);
-        } else {
-          // Algo sucedió en la configuración de la solicitud que disparó un error
-          console.log("Error", error.message);
-        }
-        console.log(error.config);
-      });
-  }, [usuario.id]);
+    const fetchProgreso = async () => {
+      const token = localStorage.getItem("token");
+      // ID
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const id = user.id;
 
-  if (cargando) {
-    return <div>Cargando...</div>; // Aquí puedes renderizar un spinner o algo similar
-  }
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/progreso/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProgreso(response.data.porcentajeCompletado);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProgreso();
+  }, [navegar]);
 
-  if (!ultimoSeccionCompletada) {
+  if (!isLoading && progreso < 100) {
     navegar("/");
     notyf.error(
-      "Debes completar todas las secciones para descargar el certificado"
+      "Debes completar el 100% del curso para descargar el certificado"
     );
-    // Redirige a la página de inicio si la última sección no se ha completado
+    return null;
   }
 
   return (
@@ -86,7 +118,10 @@ const Certificacion = () => {
           <p className="text-gray-500 mb-2">
             Otorgado por: AprendeSpringBoot Academy
           </p>
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full"
+            onClick={generarCertificado}
+          >
             Descargar
           </button>
         </div>

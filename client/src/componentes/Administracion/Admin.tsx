@@ -22,19 +22,6 @@ interface Examen {
   nombre: string;
 }
 
-interface PreguntaExamenes {
-  id: number;
-  idExamen: number;
-  Pregunta: string;
-}
-
-interface RespuestaExamenes {
-  id: number;
-  idPregunta: number;
-  Respuesta: string;
-  Correcta: boolean;
-}
-
 interface LeccionesCompletadas {
   id: number;
   leccion_id: number;
@@ -75,7 +62,7 @@ const Admin = () => {
     position: { x: "right", y: "top" },
   });
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [esAdmin, setEsAdmin] = useState(false);
+
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<number | null>(
     null
   );
@@ -89,9 +76,7 @@ const Admin = () => {
   const [examenesCompletados, setExamenesCompletados] = useState<
     ExamenesCompletados[]
   >([]);
-  const [usuario, setUsuario] = useState(
-    JSON.parse(localStorage.getItem("user") || "{}")
-  );
+  const [usuario] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
 
   const navegar = useNavigate();
 
@@ -702,22 +687,6 @@ const Admin = () => {
       });
   };
 
-  const manejarEditarPreguntaExamen = () => {
-    // Lógica para editar una pregunta de examen
-  };
-
-  const manejarBorrarPreguntaExamen = () => {
-    // Lógica para borrar una pregunta de examen
-  };
-
-  const manejarEditarRespuestaExamen = () => {
-    // Lógica para editar una respuesta de examen
-  };
-
-  const manejarBorrarRespuestaExamen = () => {
-    // Lógica para borrar una respuesta de examen
-  };
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100 h-screen">
       <div className="w-full md:w-64 bg-white p-4 shadow-lg mt-1 h-screen overflow-auto flex flex-col">
@@ -750,10 +719,6 @@ const Admin = () => {
           >
             Examenes
           </button>
-
-          <button className="w-full bg-blue-500 text-white p-2 mb-2 rounded">
-            Mini-Tests
-          </button>
         </div>
 
         <button
@@ -782,6 +747,10 @@ const Admin = () => {
                       className="w-10 h-10 rounded-full mr-2"
                     />
                     <h2 className="text-xl font-bold">{user.nombre}</h2>
+                    <h2 className="text-xl font-bold md:ml-2">
+                      {" "}
+                      - {user.correo_electronico}
+                    </h2>
                     <FontAwesomeIcon icon={faCaretDown} className="ml-auto" />
                   </div>
                   {usuarioSeleccionado === user.id && (

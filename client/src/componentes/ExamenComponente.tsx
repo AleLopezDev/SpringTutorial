@@ -23,7 +23,6 @@ interface Respuesta {
 }
 
 const ExamenComponente = () => {
-  const notyf = new Notyf();
   const [examen, setExamen] = useState<Examen[]>([]);
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const { id } = useParams<{ id: string }>();
@@ -48,14 +47,70 @@ const ExamenComponente = () => {
     localStorage.setItem("tiempoRestante", String(tiempoRestante));
   }, [tiempoRestante]);
 
+  const manejarEnvio = useCallback(() => {
+    console.log("Enviando el examen...");
+
+    // Verificar si hay respuestas seleccionadas
+    if (Object.keys(respuestasSeleccionadas).length === 0) {
+      console.log("No se seleccionaron respuestas.");
+      return;
+    }
+
+    localStorage.setItem("horaUltimoIntentoExamen", Date.now().toString());
+
+    const nuevosResultadosRespuestas: { [key: number]: boolean } = {};
+    let respuestasCorrectas = 0;
+
+    preguntas.forEach((pregunta) => {
+      const idPregunta = pregunta.id;
+      const idRespuestaSeleccionada = respuestasSeleccionadas[idPregunta];
+
+      if (idRespuestaSeleccionada === undefined) {
+        nuevosResultadosRespuestas[idPregunta] = false;
+        return;
+      }
+
+      const respuestaCorrecta = respuestas.find(
+        (respuesta) =>
+          respuesta.idPregunta === Number(idPregunta) && respuesta.correcta
+      );
+      const esCorrecta =
+        !!respuestaCorrecta && respuestaCorrecta.id === idRespuestaSeleccionada;
+      nuevosResultadosRespuestas[idPregunta] = esCorrecta;
+
+      if (esCorrecta) {
+        respuestasCorrectas++;
+      }
+    });
+
+    setExamenEnviado(true);
+
+    setResultadosRespuestas(nuevosResultadosRespuestas);
+
+    // Verificar si el usuario tiene más de la mitad de las respuestas correctas
+    if (respuestasCorrectas <= preguntas.length / 2) {
+      localStorage.setItem("horaSuspensionExamen", Date.now().toString());
+    }
+
+    localStorage.setItem("examenTomado", "true");
+    setTiempoRestante(0);
+    localStorage.removeItem("tiempoRestante");
+  }, [preguntas, respuestas, respuestasSeleccionadas]);
+
   const terminarExamen = useCallback(() => {
+    console.log("Terminando el examen...");
     setTiempoRestante(null);
     localStorage.removeItem("tiempoRestante");
     setExamenEnviado(true);
     manejarEnvio();
-  }, []);
+  }, [manejarEnvio]);
 
   useEffect(() => {
+    const notyf = new Notyf({
+      duration: 4000,
+      position: { x: "right", y: "top" },
+    });
+
     const horaSuspensionExamen = localStorage.getItem("horaSuspensionExamen");
     const examenTomado = localStorage.getItem("examenTomado");
 
@@ -70,7 +125,7 @@ const ExamenComponente = () => {
           " segundos"
       );
     }
-  }, [navigate, notyf]);
+  }, [navigate]);
 
   useEffect(() => {
     // Si el tiempo restante llega a 0, termina el examen
@@ -178,80 +233,47 @@ const ExamenComponente = () => {
       });
 
       setResultadosRespuestas(nuevosResultadosRespuestas);
-    }
-  }, [examenEnviado, preguntas, respuestas, respuestasSeleccionadas]);
 
-  const manejarEnvio = () => {
-    localStorage.setItem("horaUltimoIntentoExamen", Date.now().toString());
-    const nuevosResultadosRespuestas: { [key: number]: boolean } = {};
-    let respuestasCorrectas = 0; // Inicializa la variable aquí
+      if (respuestasCorrectas > preguntas.length / 2) {
+        const urlExamenCompletado = `http://localhost:5001/api/examenes_completados`;
 
-    preguntas.forEach((pregunta) => {
-      const idPregunta = pregunta.id;
-      const idRespuestaSeleccionada = respuestasSeleccionadas[idPregunta];
+        axios
+          .post(urlExamenCompletado, {
+            examen_id: examen[0].id,
+            usuario_id: usuario.id,
+          })
+          .then(() => {
+            console.log("Examen completado correctamente.");
+          })
+          .catch((error) => {
+            console.error("Hubo un error al completar el examen.", error);
+          });
 
-      // Si la pregunta no está contestada, es erronea
-      if (idRespuestaSeleccionada === undefined) {
-        nuevosResultadosRespuestas[idPregunta] = false;
+        // Insertar en secciones_completadas
+        const urlSeccionCompletada = `http://localhost:5001/api/secciones_completadas`;
+
+        axios
+          .post(urlSeccionCompletada, {
+            examen_id: examen[0].id,
+            usuario_id: usuario.id,
+          })
+          .then(() => {
+            console.log("Sección completada correctamente.");
+            // Puedes navegar a una página de éxito aquí, si es necesario
+          })
+          .catch((error) => {
+            console.error("Hubo un error al completar la sección.", error);
+          });
       }
-
-      const respuestaCorrecta = respuestas.find(
-        (respuesta) =>
-          respuesta.idPregunta === Number(idPregunta) && respuesta.correcta
-      );
-      const esCorrecta =
-        !!respuestaCorrecta && respuestaCorrecta.id === idRespuestaSeleccionada;
-      nuevosResultadosRespuestas[idPregunta] = esCorrecta;
-      if (esCorrecta) {
-        respuestasCorrectas++; // Incrementa el contador si la respuesta es correcta
-      }
-    });
-
-    setExamenEnviado(true);
-
-    setResultadosRespuestas(nuevosResultadosRespuestas);
-
-    // Guardar la hora en que el usuario envió el examen
-    localStorage.setItem("horaEnvioExamen", Date.now().toString());
-
-    // Comprobar si el usuario tiene más de la mitad de las respuestas correctas
-    if (respuestasCorrectas > preguntas.length / 2) {
-      // Guardar el examen como completado
-      console.log("usuario.id:", usuario.id);
-      console.log("examen[0].id:", examen[0].id);
-
-      axios
-        .post(`http://localhost:5001/api/examenes_completados`, {
-          examen_id: examen[0].id,
-          usuario_id: usuario.id,
-        })
-        .then((response) => {
-          console.log("Examen marcado como completado con éxito.");
-        })
-        .catch((error) => {
-          if (error === 401) {
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-            navigate("/login");
-            window.location.reload();
-          }
-          console.error("Error al marcar el examen como completado:", error);
-        });
-
-      axios.post(`http://localhost:5001/api/secciones_completadas`, {
-        seccion_id: examen[0].id,
-        usuario_id: usuario.id,
-      });
-    } else {
-      // Guardamos la hora en que el usuario suspendió el examen
-      localStorage.setItem("horaSuspensionExamen", Date.now().toString());
     }
-
-    // Detener el temporizador
-    localStorage.setItem("examenTomado", "true");
-    setTiempoRestante(0);
-    localStorage.removeItem("tiempoRestante");
-  };
+  }, [
+    examenEnviado,
+    preguntas,
+    respuestas,
+    respuestasSeleccionadas,
+    usuario,
+    examen,
+  ]);
 
   return (
     <div className="min-h-screen py-2 bg-gray-100">

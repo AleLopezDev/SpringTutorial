@@ -290,34 +290,39 @@ app.post("/api/lecciones_completadas", (req, res) => {
 app.get("/api/progreso/:userId", (req, res) => {
   const { userId } = req.params;
 
-  // Obtén el número total de lecciones
+  // Obtén el número total de lecciones y exámenes
   connection.query(
-    "SELECT COUNT(*) as totalLecciones FROM lecciones",
+    "SELECT COUNT(*) as totalActividades FROM ((SELECT id FROM lecciones) UNION ALL (SELECT id FROM examenes)) as actividades",
     (error, results) => {
       if (error) {
-        console.error("Error al obtener el total de lecciones:", error);
-        res.status(500).send("Error al obtener el total de lecciones");
+        console.error("Error al obtener el total de actividades:", error);
+        res.status(500).send("Error al obtener el total de actividades");
         return;
       }
 
-      const totalLecciones = results[0].totalLecciones;
+      const totalActividades = results[0].totalActividades;
 
-      // Obtén el número de lecciones que el usuario ha completado, si ha hecho bien el test la lección se considera completada
+      // Obtén el número de lecciones y exámenes que el usuario ha completado
       connection.query(
-        "SELECT COUNT(*) as leccionesCompletadas FROM lecciones_completadas WHERE usuario_id = ?",
-        [userId],
+        "SELECT COUNT(*) as actividadesCompletadas FROM ((SELECT id FROM lecciones_completadas WHERE usuario_id = ?) UNION ALL (SELECT id FROM examenes_completados WHERE usuario_id = ?)) as actividades_completadas",
+        [userId, userId],
         (error, results) => {
           if (error) {
-            console.error("Error al obtener las lecciones completadas:", error);
-            res.status(500).send("Error al obtener las lecciones completadas");
+            console.error(
+              "Error al obtener las actividades completadas:",
+              error
+            );
+            res
+              .status(500)
+              .send("Error al obtener las actividades completadas");
             return;
           }
 
-          const leccionesCompletadas = results[0].leccionesCompletadas;
+          const actividadesCompletadas = results[0].actividadesCompletadas;
 
-          // Calcula el porcentaje de lecciones completadas
+          // Calcula el porcentaje de actividades completadas
           const porcentajeCompletado = Math.round(
-            (leccionesCompletadas / totalLecciones) * 100
+            (actividadesCompletadas / totalActividades) * 100
           );
 
           res.json({ porcentajeCompletado });
@@ -528,7 +533,7 @@ app.post("/api/login", async (req, res) => {
         if (isPasswordCorrect) {
           // Crear un token de autenticación para el usuario
           const token = jwt.sign({ id: user.id }, "your_jwt_secret", {
-            expiresIn: "1h",
+            expiresIn: "3h",
           });
 
           // Enviar el token y los datos del usuario al cliente
@@ -554,12 +559,12 @@ app.post("/api/login", async (req, res) => {
 
 // Insertar las secciones completadas por el usuario
 app.post("/api/secciones_completadas", (req, res) => {
-  const { seccion_id, usuario_id } = req.body;
+  const { examen_id, usuario_id } = req.body;
 
   // Comprobar si el usuario ya ha completado esta sección
   connection.query(
     "SELECT * FROM secciones_completadas WHERE seccion_id = ? AND usuario_id = ?",
-    [seccion_id, usuario_id],
+    [examen_id, usuario_id],
     (err, existingEntry) => {
       if (err) {
         console.error("Error al seleccionar de secciones_completadas:", err);
@@ -580,7 +585,7 @@ app.post("/api/secciones_completadas", (req, res) => {
 
       connection.query(
         "INSERT INTO secciones_completadas (seccion_id, usuario_id, fecha_completada) VALUES (?, ?, ?)",
-        [seccion_id, usuario_id, fecha_completada],
+        [examen_id, usuario_id, fecha_completada],
         (err) => {
           if (err) {
             console.error("Error al insertar en secciones_completadas:", err);
@@ -741,6 +746,25 @@ app.post("/api/secciones", (req, res) => {
         return;
       }
       res.status(201).send("Sección agregada con éxito.");
+    }
+  );
+});
+
+// Obtener seccion anterior a la leccion actual para que en la url se verifique que el usuario haya completado la seccion anterior
+app.get("/api/leccion/:leccionId/seccion", (req, res) => {
+  const { leccionId } = req.params;
+
+  connection.query(
+    "SELECT secciones.* FROM secciones INNER JOIN lecciones ON secciones.id = lecciones.seccion_id WHERE lecciones.id = ?",
+    [leccionId],
+    (error, results) => {
+      if (error) {
+        console.error("Error al obtener la sección de la lección:", error);
+        res.status(500).send("Error al obtener la sección de la lección");
+        return;
+      }
+
+      res.json(results[0]); // Devuelve la sección de la lección
     }
   );
 });

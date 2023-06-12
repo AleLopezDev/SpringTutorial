@@ -144,7 +144,6 @@ const LeccionPage = () => {
         window.location.reload();
       }
       if (error.response && error.response.status === 409) {
-        console.log("Lección ya completada");
       } else {
         console.error("Error al registrar lección completada:", error);
       }
@@ -163,12 +162,17 @@ const LeccionPage = () => {
   };
 
   const handleLeccionSiguiente = () => {
-    if (leccionSiguiente) {
-      if (leccion && !seccionesCompletadas.includes(leccion.seccion_id)) {
-        notyf.error("Debes completar la sección actual primero.");
-      } else {
-        navegar(`/leccion/${leccionSiguiente.id}`);
-      }
+    if (
+      leccion &&
+      leccionSiguiente &&
+      leccion.seccion_id !== leccionSiguiente.seccion_id &&
+      !seccionesCompletadas.includes(leccion.seccion_id)
+    ) {
+      notyf.error(
+        "Debes completar la sección actual primero, realizando el examen."
+      );
+    } else if (leccionSiguiente) {
+      navegar(`/leccion/${leccionSiguiente.id}`);
     }
   };
 
@@ -189,6 +193,16 @@ const LeccionPage = () => {
 
         setLeccionAnterior(leccionesOrdenadas[indiceActual - 1]);
         setLeccionSiguiente(leccionesOrdenadas[indiceActual + 1]);
+
+        if (indiceActual === 0) {
+          setLeccionAnterior({
+            nombre: "Curso",
+            id: 0,
+            seccion_id: 0,
+            video_url: "",
+            contenido: "",
+          });
+        }
       } catch (error) {
         if (error === 401) {
           localStorage.removeItem("token");
@@ -210,9 +224,14 @@ const LeccionPage = () => {
           `http://localhost:5001/api/lecciones/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setLeccion(response.data);
-      } catch (error) {
-        if (error === 401) {
+        const leccionActual = response.data;
+
+        setLeccion(leccionActual);
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          // Si el servidor devuelve un error 404, redirige al usuario a la página del curso
+          navegar("/curso");
+        } else if (error.response && error.response.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           navegar("/login");
@@ -221,7 +240,18 @@ const LeccionPage = () => {
       }
     };
     fetchLeccion();
-  }, [id, navegar]);
+  }, [id, navegar, seccionesCompletadas]);
+
+  useEffect(() => {
+    // Verifica si el usuario ha completado la sección anterior
+    if (
+      leccion &&
+      leccion.seccion_id !== 1 &&
+      !seccionesCompletadas.includes(leccion.seccion_id - 1)
+    ) {
+      navegar("/curso"); // Redirige al usuario a la página principal
+    }
+  }, [leccion, seccionesCompletadas, navegar]);
 
   // MANEJADOR DE PREGUNTAS Aleatorias
 

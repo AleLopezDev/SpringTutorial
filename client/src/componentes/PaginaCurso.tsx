@@ -229,7 +229,6 @@ const PaginaCurso = () => {
         console.error("Error al obtener la última lección vista:", error);
       }
     } else {
-      // Aquí puedes manejar el caso en el que el usuario no esté en el almacenamiento local
       console.error("No se encontró al usuario en el almacenamiento local");
     }
   };
@@ -239,7 +238,6 @@ const PaginaCurso = () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        // Aquí puedes manejar la respuesta de la API
         navegar(`/leccion/${leccionId}`);
       } catch (error) {
         if (error === 401) {
@@ -251,7 +249,6 @@ const PaginaCurso = () => {
         console.error("Error al obtener la lección:", error);
       }
     } else {
-      // Aquí puedes manejar el caso en el que el token no esté en el almacenamiento local
       console.error("No se encontró el token en el almacenamiento local");
     }
   };
@@ -274,7 +271,7 @@ const PaginaCurso = () => {
 
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/progreso/${id}`, // Asegúrate de tener el id del usuario
+          `http://localhost:5001/api/progreso/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setProgreso(response.data.porcentajeCompletado);
