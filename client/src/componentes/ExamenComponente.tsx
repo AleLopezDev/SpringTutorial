@@ -116,6 +116,7 @@ const ExamenComponente = () => {
           getTiempoEsperaExamen() / 1000 +
           " segundos"
       );
+      navigate("/");
     }
   }, [navigate]);
 
@@ -317,6 +318,7 @@ const ExamenComponente = () => {
                       onChange={() =>
                         manejarCambioRespuesta(pregunta.id, respuesta.id)
                       }
+                      disabled={tiempoRestante === null || examenEnviado}
                     />
                     <span className="text-base leading-normal">
                       {respuesta.Respuesta}
